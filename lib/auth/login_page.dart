@@ -7,7 +7,9 @@ import '../screens/admin/admin_dashboard.dart';
 import '../services/constants.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  final String? successMessage;
+
+  const LoginPage({super.key, this.successMessage});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -21,6 +23,17 @@ class _LoginPageState extends State<LoginPage> {
   bool _isLoading = false;
   bool _obscurePassword = true;
 
+  @override
+  void initState() {
+    super.initState();
+    if (widget.successMessage != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        AppConstants.showSnackBar(context, widget.successMessage!);
+      });
+    }
+  }
+
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -32,23 +45,48 @@ class _LoginPageState extends State<LoginPage> {
         _passwordController.text.trim(),
       );
 
-      if (user != null && mounted) {
-        // Role onujayi dashboard e niye jabe
+      if (user == null) {
+        if (mounted) {
+          AppConstants.showSnackBar(
+            context,
+            'Account profile not found. Please contact support.',
+            isError: true,
+          );
+        }
+        return;
+      }
+
+      if (mounted) {
+        // Navigate based on role
         if (user.role == 'admin') {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (_) => AdminDashboard(user: user)),
+            MaterialPageRoute(
+              builder: (_) => AdminDashboard(
+                user: user,
+                successMessage: 'Login successful.',
+              ),
+            ),
           );
         } else {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (_) => UserDashboard(user: user)),
+            MaterialPageRoute(
+              builder: (_) => UserDashboard(
+                user: user,
+                successMessage: 'Login successful.',
+              ),
+            ),
           );
         }
       }
     } catch (e) {
       if (mounted) {
-        AppConstants.showSnackBar(context, 'Login failed: ${e.toString()}', isError: true);
+        AppConstants.showSnackBar(
+          context,
+          AppConstants.formatError(e),
+          isError: true,
+        );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -89,7 +127,7 @@ class _LoginPageState extends State<LoginPage> {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: AppConstants.primaryColor.withOpacity(0.1),
+                            color: AppConstants.primaryColor.withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -125,10 +163,10 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Email দিন';
+                              return 'Please enter your email';
                             }
                             if (!value.contains('@')) {
-                              return 'Valid email দিন';
+                              return 'Please enter a valid email';
                             }
                             return null;
                           },
@@ -156,10 +194,10 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Password দিন';
+                              return 'Please enter your password';
                             }
                             if (value.length < 6) {
-                              return 'Password কমপক্ষে 6 character হতে হবে';
+                              return 'Password must be at least 6 characters';
                             }
                             return null;
                           },

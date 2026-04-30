@@ -80,7 +80,7 @@ class _AddFlightPageState extends State<AddFlightPage> {
       if (mounted) {
         AppConstants.showSnackBar(
           context,
-          'Failed to add flight: ${e.toString()}',
+          'Failed to add flight: ${AppConstants.formatError(e)}',
           isError: true,
         );
       }
@@ -109,7 +109,7 @@ class _AddFlightPageState extends State<AddFlightPage> {
                 child: Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: AppConstants.successColor.withOpacity(0.1),
+                    color: AppConstants.successColor.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -140,7 +140,7 @@ class _AddFlightPageState extends State<AddFlightPage> {
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Flight number দিন';
+                    return 'Please enter a flight number';
                   }
                   return null;
                 },
@@ -160,7 +160,7 @@ class _AddFlightPageState extends State<AddFlightPage> {
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Departure city দিন';
+                    return 'Please enter a departure city';
                   }
                   return null;
                 },
@@ -180,7 +180,7 @@ class _AddFlightPageState extends State<AddFlightPage> {
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Arrival city দিন';
+                    return 'Please enter an arrival city';
                   }
                   return null;
                 },
@@ -202,7 +202,7 @@ class _AddFlightPageState extends State<AddFlightPage> {
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Date select করুন';
+                    return 'Please select a date';
                   }
                   return null;
                 },
@@ -224,7 +224,7 @@ class _AddFlightPageState extends State<AddFlightPage> {
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Time select করুন';
+                    return 'Please select a time';
                   }
                   return null;
                 },
@@ -245,10 +245,10 @@ class _AddFlightPageState extends State<AddFlightPage> {
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Price দিন';
+                    return 'Please enter a price';
                   }
                   if (double.tryParse(value) == null) {
-                    return 'Valid price দিন';
+                    return 'Please enter a valid price';
                   }
                   return null;
                 },
@@ -269,10 +269,10 @@ class _AddFlightPageState extends State<AddFlightPage> {
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Seat সংখ্যা দিন';
+                    return 'Please enter total seats';
                   }
                   if (int.tryParse(value) == null) {
-                    return 'Valid number দিন';
+                    return 'Please enter a valid number';
                   }
                   return null;
                 },

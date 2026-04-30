@@ -25,7 +25,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // Admin hole code check korbo
+    // Validate admin code when admin registration is selected
     if (_isAdminRegistration) {
       if (_adminCodeController.text.trim() != AppConstants.adminCode) {
         AppConstants.showSnackBar(context, 'Invalid Admin Code!', isError: true);
@@ -50,7 +50,11 @@ class _RegistrationPageState extends State<RegistrationPage> {
       }
     } catch (e) {
       if (mounted) {
-        AppConstants.showSnackBar(context, 'Registration failed: ${e.toString()}', isError: true);
+        AppConstants.showSnackBar(
+          context,
+          AppConstants.formatError(e),
+          isError: true,
+        );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -91,7 +95,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: AppConstants.successColor.withOpacity(0.1),
+                            color: AppConstants.successColor.withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -133,7 +137,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                             onChanged: (value) {
                               setState(() => _isAdminRegistration = value);
                             },
-                            activeColor: AppConstants.warningColor,
+                            activeThumbColor: AppConstants.warningColor,
                           ),
                         ),
                         const SizedBox(height: 20),
@@ -150,7 +154,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Name দিন';
+                              return 'Please enter your full name';
                             }
                             return null;
                           },
@@ -170,10 +174,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Phone number দিন';
+                              return 'Please enter your phone number';
                             }
                             if (value.length < 10) {
-                              return 'Valid phone number দিন';
+                              return 'Please enter a valid phone number';
                             }
                             return null;
                           },
@@ -193,10 +197,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Email দিন';
+                              return 'Please enter your email';
                             }
                             if (!value.contains('@')) {
-                              return 'Valid email দিন';
+                              return 'Please enter a valid email';
                             }
                             return null;
                           },
@@ -224,10 +228,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Password দিন';
+                              return 'Please enter a password';
                             }
                             if (value.length < 6) {
-                              return 'Password কমপক্ষে 6 character হতে হবে';
+                              return 'Password must be at least 6 characters';
                             }
                             return null;
                           },
@@ -246,12 +250,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              fillColor: AppConstants.warningColor.withOpacity(0.1),
+                              fillColor: AppConstants.warningColor.withValues(alpha: 0.1),
                               filled: true,
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
-                                return 'Admin code দিন';
+                                return 'Please enter the admin code';
                               }
                               return null;
                             },

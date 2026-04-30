@@ -21,10 +21,42 @@ class AvailableFlightsPage extends StatelessWidget {
         foregroundColor: Colors.white,
       ),
       body: StreamBuilder<List<FlightModel>>(
-        stream: firestoreService.getFlights(),
+        stream: firestoreService.getAvailableFlights(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 64,
+                      color: Colors.grey[500],
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Unable to load flights',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      AppConstants.formatError(snapshot.error!),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+              ),
+            );
           }
 
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
@@ -91,7 +123,7 @@ class AvailableFlightsPage extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: AppConstants.primaryColor.withOpacity(0.1),
+                                color: AppConstants.primaryColor.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Icon(
