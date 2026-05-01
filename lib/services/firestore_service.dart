@@ -180,4 +180,19 @@ class FirestoreService {
           return bookings;
         });
   }
+
+  Stream<Map<String, dynamic>> getAdminSettings() {
+    return _db
+        .collection('adminSettings')
+        .doc('global')
+        .snapshots()
+        .map((doc) => doc.data() ?? {});
+  }
+
+  Future<void> updateAdminSettings(Map<String, dynamic> settings) async {
+    await _db
+        .collection('adminSettings')
+        .doc('global')
+        .set(settings, SetOptions(merge: true));
+  }
 }

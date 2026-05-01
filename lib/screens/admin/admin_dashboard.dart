@@ -8,7 +8,10 @@ import '../../services/constants.dart';
 import '../../auth/auth_service.dart';
 import '../../auth/login_page.dart';
 import 'add_flight_page.dart';
+import 'admin_settings_page.dart';
+import 'booking_overview_page.dart';
 import 'income_report_page.dart';
+import 'user_accounts_page.dart';
 
 class AdminDashboard extends StatefulWidget {
   final UserModel user;
@@ -23,6 +26,8 @@ class AdminDashboard extends StatefulWidget {
 class _AdminDashboardState extends State<AdminDashboard> {
   final FirestoreService _firestoreService = FirestoreService();
   final AuthService _authService = AuthService();
+  final ScrollController _scrollController = ScrollController();
+  final GlobalKey _flightManagementKey = GlobalKey();
 
   @override
   void initState() {
@@ -33,6 +38,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
         AppConstants.showSnackBar(context, widget.successMessage!);
       });
     }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _logout() async {
@@ -211,6 +222,18 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
+  void _scrollToSection(GlobalKey key) {
+    final context = key.currentContext;
+    if (context == null) {
+      return;
+    }
+    Scrollable.ensureVisible(
+      context,
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeInOut,
+    );
+  }
+
   Widget _buildProfileTile({
     required IconData icon,
     required String title,
@@ -284,6 +307,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
   Widget build(BuildContext context) {
     final bool isWide = MediaQuery.of(context).size.width >= 1200;
     final Widget mainContent = SingleChildScrollView(
+      controller: _scrollController,
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -329,7 +353,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
             },
           ),
           const SizedBox(height: 20),
-          _buildFlightManagementSection(),
+          Container(
+            key: _flightManagementKey,
+            child: _buildFlightManagementSection(),
+          ),
         ],
       ),
     );
@@ -1097,17 +1124,30 @@ class _AdminDashboardState extends State<AdminDashboard> {
             label: 'Flight Management',
             onTap: () {
               _closeDrawerIfOpen(context);
+              _scrollToSection(_flightManagementKey);
             },
           ),
           _buildSidebarItem(
             icon: Icons.receipt_long,
             label: 'Booking Overview',
-            onTap: () => _closeDrawerIfOpen(context),
+            onTap: () {
+              _closeDrawerIfOpen(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => BookingOverviewPage()),
+              );
+            },
           ),
           _buildSidebarItem(
             icon: Icons.group,
             label: 'User Accounts',
-            onTap: () => _closeDrawerIfOpen(context),
+            onTap: () {
+              _closeDrawerIfOpen(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => UserAccountsPage()),
+              );
+            },
           ),
           _buildSidebarItem(
             icon: Icons.analytics_outlined,
@@ -1123,7 +1163,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
           _buildSidebarItem(
             icon: Icons.settings_outlined,
             label: 'Settings',
-            onTap: () => _closeDrawerIfOpen(context),
+            onTap: () {
+              _closeDrawerIfOpen(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AdminSettingsPage()),
+              );
+            },
           ),
           const Spacer(),
           _buildSidebarItem(

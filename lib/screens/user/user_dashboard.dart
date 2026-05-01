@@ -7,6 +7,8 @@ import '../../auth/auth_service.dart';
 import '../../auth/login_page.dart';
 import 'add_balance_page.dart';
 import 'available_flights_page.dart';
+import 'frequent_flyer_page.dart';
+import 'support_page.dart';
 
 class UserDashboard extends StatefulWidget {
   final UserModel user;
@@ -942,9 +944,20 @@ class _UserDashboardState extends State<UserDashboard> {
             label: 'Frequent Flyer',
             onTap: () {
               _closeDrawerIfOpen(context);
-              AppConstants.showSnackBar(
+              final user = _currentUser;
+              if (user == null) {
+                AppConstants.showSnackBar(
+                  context,
+                  'Profile data is still loading.',
+                  isError: true,
+                );
+                return;
+              }
+              Navigator.push(
                 context,
-                'Points details are in the panel.',
+                MaterialPageRoute(
+                  builder: (_) => FrequentFlyerPage(user: user),
+                ),
               );
             },
           ),
@@ -953,7 +966,10 @@ class _UserDashboardState extends State<UserDashboard> {
             label: 'Support',
             onTap: () {
               _closeDrawerIfOpen(context);
-              AppConstants.showSnackBar(context, 'Support is on the way.');
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const SupportPage()),
+              );
             },
           ),
           const Spacer(),
