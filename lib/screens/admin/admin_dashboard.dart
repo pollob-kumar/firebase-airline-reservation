@@ -12,6 +12,7 @@ import 'admin_settings_page.dart';
 import 'booking_overview_page.dart';
 import 'income_report_page.dart';
 import 'user_accounts_page.dart';
+import 'admin_notifications_page.dart';
 
 class AdminDashboard extends StatefulWidget {
   final UserModel user;
@@ -28,6 +29,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
   final AuthService _authService = AuthService();
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _flightManagementKey = GlobalKey();
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -38,11 +41,20 @@ class _AdminDashboardState extends State<AdminDashboard> {
         AppConstants.showSnackBar(context, widget.successMessage!);
       });
     }
+
+    _searchController.addListener(() {
+      final query = _searchController.text.trim().toLowerCase();
+      if (query == _searchQuery) {
+        return;
+      }
+      setState(() => _searchQuery = query);
+    });
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -410,9 +422,16 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
         final Widget search = Expanded(
           child: TextField(
+            controller: _searchController,
             decoration: InputDecoration(
-              hintText: 'Search',
+              hintText: 'Search flights, routes, dates',
               prefixIcon: const Icon(Icons.search),
+              suffixIcon: _searchQuery.isEmpty
+                  ? null
+                  : IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => _searchController.clear(),
+                    ),
               filled: true,
               fillColor: Colors.white,
               border: OutlineInputBorder(
@@ -433,7 +452,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
             IconButton(
               icon: const Icon(Icons.notifications_none),
               onPressed: () {
-                AppConstants.showSnackBar(context, 'No new notifications.');
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const AdminNotificationsPage(),
+                  ),
+                );
               },
             ),
             GestureDetector(
@@ -695,13 +719,78 @@ class _AdminDashboardState extends State<AdminDashboard> {
             style: AppConstants.subHeadingStyle,
           ),
           const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                flex: 2,
+                child: Text(
+                  'Flight #',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 3,
+                child: Text(
+                  'Route',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 2,
+                child: Text(
+                  'Departure',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 2,
+                child: Text(
+                  'Status',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 3,
+                child: Text(
+                  'Load Factor',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
           StreamBuilder<List<FlightModel>>(
             stream: _firestoreService.getFlights(),
             builder: (context, snapshot) {
-              final flights = (snapshot.data ?? []).take(4).toList();
+              final flights = (snapshot.data ?? [])
+                  .where(_matchesSearchQuery)
+                  .take(4)
+                  .toList();
               if (flights.isEmpty) {
                 return Text(
-                  'No flights available.',
+                  _searchQuery.isEmpty
+                      ? 'No flights available.'
+                      : 'No flights match your search.',
                   style: TextStyle(color: Colors.grey[600]),
                 );
               }
@@ -808,9 +897,23 @@ class _AdminDashboardState extends State<AdminDashboard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Recent Activity Feed',
-            style: AppConstants.subHeadingStyle,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Recent Activity Feed',
+                style: AppConstants.subHeadingStyle,
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => BookingOverviewPage()),
+                  );
+                },
+                child: const Text('View all'),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           StreamBuilder<List<BookingModel>>(
@@ -841,7 +944,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
                           '${booking.userName} booked ${booking.flightNumber}',
                           style: const TextStyle(fontWeight: FontWeight.w600),
                         ),
-                        subtitle: Text('${booking.from} → ${booking.to}'),
+                        subtitle: Text(
+                          '${booking.from} → ${booking.to} • ${_formatDate(booking.bookingDate)}',
+                        ),
                       ),
                     )
                     .toList(),
@@ -1010,13 +1115,43 @@ class _AdminDashboardState extends State<AdminDashboard> {
             }
 
             final flights = snapshot.data!;
+            final filteredFlights = flights.where(_matchesSearchQuery).toList();
+
+            if (filteredFlights.isEmpty) {
+              return Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Center(
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.search_off,
+                          size: 64,
+                          color: Colors.grey[400],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          _searchQuery.isEmpty
+                              ? 'No flights added yet'
+                              : 'No flights match your search',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }
 
             return ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: flights.length,
+              itemCount: filteredFlights.length,
               itemBuilder: (context, index) {
-                final flight = flights[index];
+                final flight = filteredFlights[index];
                 return Card(
                   elevation: 3,
                   margin: const EdgeInsets.only(bottom: 12),
@@ -1139,6 +1274,19 @@ class _AdminDashboardState extends State<AdminDashboard> {
             },
           ),
           _buildSidebarItem(
+            icon: Icons.notifications_none,
+            label: 'Notifications',
+            onTap: () {
+              _closeDrawerIfOpen(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const AdminNotificationsPage(),
+                ),
+              );
+            },
+          ),
+          _buildSidebarItem(
             icon: Icons.group,
             label: 'User Accounts',
             onTap: () {
@@ -1167,7 +1315,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
               _closeDrawerIfOpen(context);
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const AdminSettingsPage()),
+                MaterialPageRoute(
+                  builder: (_) => AdminSettingsPage(user: widget.user),
+                ),
               );
             },
           ),
@@ -1232,6 +1382,24 @@ class _AdminDashboardState extends State<AdminDashboard> {
     if (scaffold != null && scaffold.isDrawerOpen) {
       Navigator.pop(context);
     }
+  }
+
+  bool _matchesSearchQuery(FlightModel flight) {
+    if (_searchQuery.isEmpty) {
+      return true;
+    }
+    final query = _searchQuery;
+    return flight.flightNumber.toLowerCase().contains(query) ||
+        flight.from.toLowerCase().contains(query) ||
+        flight.to.toLowerCase().contains(query) ||
+        flight.date.toLowerCase().contains(query) ||
+        flight.time.toLowerCase().contains(query);
+  }
+
+  String _formatDate(DateTime date) {
+    final String day = date.day.toString().padLeft(2, '0');
+    final String month = date.month.toString().padLeft(2, '0');
+    return '$day/$month/${date.year}';
   }
 
   Widget _buildActionButton({

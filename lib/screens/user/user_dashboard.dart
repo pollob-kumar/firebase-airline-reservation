@@ -9,6 +9,8 @@ import 'add_balance_page.dart';
 import 'available_flights_page.dart';
 import 'frequent_flyer_page.dart';
 import 'support_page.dart';
+import 'user_settings_page.dart';
+import 'user_notifications_page.dart';
 
 class UserDashboard extends StatefulWidget {
   final UserModel user;
@@ -24,6 +26,11 @@ class _UserDashboardState extends State<UserDashboard> {
   final FirestoreService _firestoreService = FirestoreService();
   final AuthService _authService = AuthService();
   UserModel? _currentUser;
+  final TextEditingController _originController = TextEditingController();
+  final TextEditingController _destinationController = TextEditingController();
+  final TextEditingController _dateController = TextEditingController();
+  final TextEditingController _passengerController =
+      TextEditingController(text: '1');
 
   @override
   void initState() {
@@ -37,6 +44,15 @@ class _UserDashboardState extends State<UserDashboard> {
         AppConstants.showSnackBar(context, widget.successMessage!);
       });
     }
+  }
+
+  @override
+  void dispose() {
+    _originController.dispose();
+    _destinationController.dispose();
+    _dateController.dispose();
+    _passengerController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadUserData() async {
@@ -211,7 +227,25 @@ class _UserDashboardState extends State<UserDashboard> {
                       MaterialPageRoute(
                         builder: (_) => _MyBookingsPage(userId: user.uid),
                       ),
+                      );
+                    },
+                  ),
+                _buildProfileTile(
+                  icon: Icons.settings_outlined,
+                  title: 'Settings',
+                  onTap: () async {
+                    Navigator.pop(context);
+                    if (_currentUser == null) {
+                      return;
+                    }
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            UserSettingsPage(user: _currentUser!),
+                      ),
                     );
+                    _loadUserData();
                   },
                 ),
                 _buildProfileTile(
@@ -374,9 +408,13 @@ class _UserDashboardState extends State<UserDashboard> {
         ),
         IconButton(
           onPressed: () {
-            AppConstants.showSnackBar(
+            Navigator.push(
               context,
-              'No new notifications right now.',
+              MaterialPageRoute(
+                builder: (_) => UserNotificationsPage(
+                  userId: widget.user.uid,
+                ),
+              ),
             );
           },
           icon: const Icon(
@@ -435,21 +473,27 @@ class _UserDashboardState extends State<UserDashboard> {
                 label: 'Origin',
                 hint: 'JFK',
                 icon: Icons.flight_takeoff,
+                controller: _originController,
               );
               final Widget destinationField = _buildSearchField(
                 label: 'Destination',
                 hint: 'LHR',
                 icon: Icons.flight_land,
+                controller: _destinationController,
               );
               final Widget dateField = _buildSearchField(
                 label: 'Dates',
                 hint: 'Select',
                 icon: Icons.date_range,
+                controller: _dateController,
+                readOnly: true,
+                onTap: _pickDate,
               );
               final Widget passengerField = _buildSearchField(
                 label: 'Passenger',
                 hint: '1 Adult',
                 icon: Icons.person,
+                controller: _passengerController,
               );
 
               if (stacked) {
@@ -488,10 +532,40 @@ class _UserDashboardState extends State<UserDashboard> {
     );
   }
 
+  Future<void> _pickDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now().subtract(const Duration(days: 1)),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (picked == null) {
+      return;
+    }
+    final String day = picked.day.toString().padLeft(2, '0');
+    final String month = picked.month.toString().padLeft(2, '0');
+    _dateController.text = '$day/$month/${picked.year}';
+  }
+
+  int? _parsePassengerCount(String raw) {
+    final match = RegExp(r'\d+').firstMatch(raw);
+    if (match == null) {
+      return null;
+    }
+    final value = int.tryParse(match.group(0) ?? '');
+    if (value == null || value <= 0) {
+      return null;
+    }
+    return value;
+  }
+
   Widget _buildSearchField({
     required String label,
     required String hint,
     required IconData icon,
+    TextEditingController? controller,
+    bool readOnly = false,
+    VoidCallback? onTap,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -506,7 +580,9 @@ class _UserDashboardState extends State<UserDashboard> {
         ),
         const SizedBox(height: 6),
         TextField(
-          readOnly: true,
+          controller: controller,
+          readOnly: readOnly,
+          onTap: onTap,
           decoration: InputDecoration(
             hintText: hint,
             prefixIcon: Icon(icon, color: AppConstants.secondaryColor),
@@ -540,10 +616,22 @@ class _UserDashboardState extends State<UserDashboard> {
             );
             return;
           }
+          final String origin = _originController.text.trim();
+          final String destination = _destinationController.text.trim();
+          final String date = _dateController.text.trim();
+          final int? passengers = _parsePassengerCount(
+            _passengerController.text,
+          );
           await Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => AvailableFlightsPage(user: _currentUser!),
+              builder: (_) => AvailableFlightsPage(
+                user: _currentUser!,
+                origin: origin,
+                destination: destination,
+                date: date,
+                passengers: passengers,
+              ),
             ),
           );
           _loadUserData();
@@ -658,29 +746,57 @@ class _UserDashboardState extends State<UserDashboard> {
                 booking.time,
                 style: const TextStyle(fontWeight: FontWeight.w600),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: AppConstants.successColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Text(
-                  'Confirmed',
-                  style: TextStyle(
-                    color: AppConstants.successColor,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _statusColor(booking.status).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    _statusLabel(booking.status),
+                    style: TextStyle(
+                      color: _statusColor(booking.status),
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
         ],
       ),
     );
+  }
+
+  String _statusLabel(String status) {
+    final normalized = status.toLowerCase();
+    switch (normalized) {
+      case 'pending':
+        return 'Pending';
+      case 'cancel_requested':
+        return 'Cancel Requested';
+      case 'cancelled':
+        return 'Cancelled';
+      default:
+        return 'Confirmed';
+    }
+  }
+
+  Color _statusColor(String status) {
+    final normalized = status.toLowerCase();
+    switch (normalized) {
+      case 'pending':
+        return AppConstants.warningColor;
+      case 'cancel_requested':
+        return AppConstants.warningColor;
+      case 'cancelled':
+        return AppConstants.errorColor;
+      default:
+        return AppConstants.successColor;
+    }
   }
 
   Widget _buildQuickActionsCard() {
@@ -937,6 +1053,29 @@ class _UserDashboardState extends State<UserDashboard> {
             onTap: () {
               _closeDrawerIfOpen(context);
               _openProfileSheet();
+            },
+          ),
+          _buildSidebarItem(
+            icon: Icons.settings_outlined,
+            label: 'Settings',
+            onTap: () async {
+              _closeDrawerIfOpen(context);
+              final user = _currentUser;
+              if (user == null) {
+                AppConstants.showSnackBar(
+                  context,
+                  'Profile data is still loading.',
+                  isError: true,
+                );
+                return;
+              }
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => UserSettingsPage(user: user),
+                ),
+              );
+              _loadUserData();
             },
           ),
           _buildSidebarItem(
@@ -1218,12 +1357,12 @@ class _MyBookingsPage extends StatelessWidget {
                               vertical: 6,
                             ),
                             decoration: BoxDecoration(
-                              color: AppConstants.successColor,
+                              color: _statusColor(booking.status),
                               borderRadius: BorderRadius.circular(20),
                             ),
-                            child: const Text(
-                              'Confirmed',
-                              style: TextStyle(
+                            child: Text(
+                              _statusLabel(booking.status),
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
@@ -1257,6 +1396,33 @@ class _MyBookingsPage extends StatelessWidget {
                         'Price',
                         '৳ ${booking.price.toStringAsFixed(2)}',
                       ),
+                      if (booking.status.toLowerCase() == 'confirmed') ...[
+                        const SizedBox(height: 12),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: OutlinedButton.icon(
+                            onPressed: () => _requestCancellation(
+                              context,
+                              booking,
+                            ),
+                            icon: const Icon(Icons.cancel_outlined),
+                            label: const Text('Request Cancellation'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppConstants.errorColor,
+                              side: const BorderSide(
+                                color: AppConstants.errorColor,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ] else if (booking.status.toLowerCase() ==
+                          'cancel_requested') ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          'Cancellation requested. Waiting for admin approval.',
+                          style: TextStyle(color: Colors.grey[600]),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -1288,5 +1454,80 @@ class _MyBookingsPage extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  String _statusLabel(String status) {
+    final normalized = status.toLowerCase();
+    switch (normalized) {
+      case 'pending':
+        return 'Pending';
+      case 'cancel_requested':
+        return 'Cancel Requested';
+      case 'cancelled':
+        return 'Cancelled';
+      default:
+        return 'Confirmed';
+    }
+  }
+
+  Color _statusColor(String status) {
+    final normalized = status.toLowerCase();
+    switch (normalized) {
+      case 'pending':
+        return AppConstants.warningColor;
+      case 'cancel_requested':
+        return AppConstants.warningColor;
+      case 'cancelled':
+        return AppConstants.errorColor;
+      default:
+        return AppConstants.successColor;
+    }
+  }
+
+  Future<void> _requestCancellation(
+    BuildContext context,
+    BookingModel booking,
+  ) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Request Cancellation'),
+        content: Text(
+          'Send a cancellation request for ${booking.flightNumber}?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('No'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Yes'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) {
+      return;
+    }
+
+    try {
+      await FirestoreService().requestBookingCancellation(booking.id);
+      if (context.mounted) {
+        AppConstants.showSnackBar(
+          context,
+          'Cancellation request sent.',
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        AppConstants.showSnackBar(
+          context,
+          AppConstants.formatError(e),
+          isError: true,
+        );
+      }
+    }
   }
 }

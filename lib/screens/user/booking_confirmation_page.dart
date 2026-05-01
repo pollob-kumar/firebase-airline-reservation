@@ -32,12 +32,7 @@ class _BookingConfirmationPageState extends State<BookingConfirmationPage> {
       );
 
       if (mounted) {
-        AppConstants.showSnackBar(
-          context,
-          'Booking confirmed successfully! ✈️',
-        );
-        Navigator.pop(context);
-        Navigator.pop(context);
+        Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {

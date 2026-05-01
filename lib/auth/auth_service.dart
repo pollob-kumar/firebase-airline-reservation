@@ -62,6 +62,32 @@ class AuthService {
     await _auth.signOut();
   }
 
+  Future<void> updateDisplayName(String name) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw Exception('User not authenticated.');
+    }
+    await user.updateDisplayName(name);
+  }
+
+  Future<void> updatePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null || user.email == null) {
+      throw Exception('User not authenticated.');
+    }
+
+    final credential = EmailAuthProvider.credential(
+      email: user.email!,
+      password: currentPassword,
+    );
+
+    await user.reauthenticateWithCredential(credential);
+    await user.updatePassword(newPassword);
+  }
+
   String _friendlyAuthError(FirebaseAuthException error) {
     switch (error.code) {
       case 'wrong-password':

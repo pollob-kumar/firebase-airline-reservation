@@ -92,7 +92,7 @@ class BookingOverviewPage extends StatelessWidget {
                     separatorBuilder: (_, __) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final booking = bookings[index];
-                      return _buildBookingCard(booking);
+                      return _buildBookingCard(context, booking);
                     },
                   ),
               ],
@@ -152,59 +152,196 @@ class BookingOverviewPage extends StatelessWidget {
     );
   }
 
-  Widget _buildBookingCard(BookingModel booking) {
+  Widget _buildBookingCard(BuildContext context, BookingModel booking) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
-        leading: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: AppConstants.primaryColor.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Icon(
-            Icons.flight_takeoff,
-            color: AppConstants.primaryColor,
-          ),
-        ),
-        title: Text(
-          booking.flightNumber,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Column(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 4),
-            Text('${booking.from} -> ${booking.to}'),
-            const SizedBox(height: 4),
-            Text('${booking.userName} • ${booking.userEmail}'),
-            const SizedBox(height: 4),
-            Text(_formatDate(booking.bookingDate)),
-          ],
-        ),
-        trailing: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              '৳${booking.price.toStringAsFixed(0)}',
-              style: const TextStyle(fontWeight: FontWeight.bold),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: AppConstants.primaryColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.flight_takeoff,
+                    color: AppConstants.primaryColor,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        booking.flightNumber,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 4),
+                      Text('${booking.from} -> ${booking.to}'),
+                      const SizedBox(height: 4),
+                      Text('${booking.userName} • ${booking.userEmail}'),
+                      const SizedBox(height: 4),
+                      Text(_formatDate(booking.bookingDate)),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '৳${booking.price.toStringAsFixed(0)}',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 6),
+                    _buildStatusChip(booking.status),
+                  ],
+                ),
+              ],
             ),
-            const SizedBox(height: 6),
-            _buildStatusChip(booking.status),
+            const SizedBox(height: 12),
+            _buildBookingActions(context, booking),
           ],
         ),
       ),
     );
   }
 
+  Widget _buildBookingActions(BuildContext context, BookingModel booking) {
+    final status = booking.status.toLowerCase();
+    if (status == 'cancelled') {
+      return Text(
+        'This booking is cancelled.',
+        style: TextStyle(color: Colors.grey[600]),
+      );
+    }
+
+    return Row(
+      children: [
+        if (status == 'pending') ...[
+          Expanded(
+            child: ElevatedButton.icon(
+              onPressed: () => _confirmBooking(context, booking),
+              icon: const Icon(Icons.check),
+              label: const Text('Confirm'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppConstants.successColor,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+        ],
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: () => _cancelBooking(context, booking),
+            icon: const Icon(Icons.cancel_outlined),
+            label: Text(status == 'cancel_requested' ? 'Approve Cancel' : 'Cancel'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppConstants.errorColor,
+              side: const BorderSide(color: AppConstants.errorColor),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _confirmBooking(BuildContext context, BookingModel booking) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Booking'),
+        content: Text('Confirm booking ${booking.flightNumber}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('No'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Yes'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+
+    try {
+      await _firestoreService.confirmBooking(booking.id);
+      if (context.mounted) {
+        AppConstants.showSnackBar(context, 'Booking confirmed.');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        AppConstants.showSnackBar(
+          context,
+          AppConstants.formatError(e),
+          isError: true,
+        );
+      }
+    }
+  }
+
+  Future<void> _cancelBooking(BuildContext context, BookingModel booking) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cancel Booking'),
+        content: Text('Cancel booking ${booking.flightNumber}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('No'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Yes'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) {
+      return;
+    }
+
+    try {
+      await _firestoreService.cancelBookingByAdmin(bookingId: booking.id);
+      if (context.mounted) {
+        AppConstants.showSnackBar(context, 'Booking cancelled.');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        AppConstants.showSnackBar(
+          context,
+          AppConstants.formatError(e),
+          isError: true,
+        );
+      }
+    }
+  }
+
   Widget _buildStatusChip(String status) {
     final String label = status.isEmpty ? 'confirmed' : status;
-    final Color color = label.toLowerCase() == 'confirmed'
-        ? AppConstants.successColor
-        : AppConstants.warningColor;
+    final String normalized = label.toLowerCase();
+    final Color color = switch (normalized) {
+      'confirmed' => AppConstants.successColor,
+      'pending' => AppConstants.warningColor,
+      'cancel_requested' => AppConstants.warningColor,
+      'cancelled' => AppConstants.errorColor,
+      _ => AppConstants.primaryColor,
+    };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(

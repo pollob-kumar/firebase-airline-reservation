@@ -79,20 +79,16 @@ class IncomeReportPage extends StatelessWidget {
           }
 
           final bookings = snapshot.data!;
-          final computedTotalIncome = bookings.fold<double>(
+          final confirmedBookings = bookings
+              .where((booking) => booking.status.toLowerCase() == 'confirmed')
+              .toList();
+          final computedTotalIncome = confirmedBookings.fold<double>(
             0,
             (sum, booking) => sum + booking.price,
           );
 
-          return StreamBuilder<double?>(
-            stream: firestoreService.getTotalIncome(),
-            builder: (context, totalSnapshot) {
-              final totalIncome = totalSnapshot.hasError
-                  ? computedTotalIncome
-                  : (totalSnapshot.data ?? computedTotalIncome);
-
-              return Column(
-                children: [
+          return Column(
+            children: [
                   // Total Income Card
                   Container(
                     margin: const EdgeInsets.all(16),
@@ -130,7 +126,7 @@ class IncomeReportPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          '৳ ${totalIncome.toStringAsFixed(2)}',
+                          '৳ ${computedTotalIncome.toStringAsFixed(2)}',
                           style: const TextStyle(
                             fontSize: 40,
                             fontWeight: FontWeight.bold,
@@ -139,7 +135,7 @@ class IncomeReportPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'From ${bookings.length} bookings',
+                          'From ${confirmedBookings.length} confirmed bookings',
                           style: const TextStyle(
                             fontSize: 14,
                             color: Colors.white70,
@@ -263,6 +259,12 @@ class IncomeReportPage extends StatelessWidget {
                                       'Booked On',
                                       _formatDateTime(booking.bookingDate),
                                     ),
+                                    const SizedBox(height: 6),
+                                    _buildDetailRow(
+                                      Icons.info_outline,
+                                      'Status',
+                                      booking.status.toUpperCase(),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -275,10 +277,8 @@ class IncomeReportPage extends StatelessWidget {
                 ],
               );
             },
-          );
-        },
-      ),
-    );
+          ),
+      );
   }
 
   Widget _buildDetailRow(IconData icon, String label, String value) {

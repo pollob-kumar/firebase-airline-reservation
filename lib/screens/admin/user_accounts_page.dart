@@ -256,12 +256,180 @@ class UserAccountsPage extends StatelessWidget {
             _buildDetailRow('Phone', user.phone),
             _buildDetailRow('Role', user.role.toUpperCase()),
             _buildDetailRow('Balance', '৳${user.balance.toStringAsFixed(2)}'),
+            const SizedBox(height: 8),
+            if (user.isDisabled) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppConstants.errorColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Status: Disabled',
+                      style: TextStyle(
+                        color: AppConstants.errorColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Reason: ${user.disabledReason ?? 'No reason provided'}',
+                      style: TextStyle(
+                        color: AppConstants.errorColor,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          if (!user.isDisabled)
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _showDisableUserDialog(context, user);
+              },
+              child: Text(
+                'Disable Account',
+                style: TextStyle(color: AppConstants.errorColor),
+              ),
+            ),
+          if (user.isDisabled)
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _showEnableUserDialog(context, user);
+              },
+              child: Text(
+                'Enable Account',
+                style: TextStyle(color: AppConstants.successColor),
+              ),
+            ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDisableUserDialog(BuildContext context, UserModel user) {
+    final TextEditingController reasonController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Disable Account'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Are you sure you want to disable ${user.name}\'s account?',
+              style: const TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: reasonController,
+              decoration: InputDecoration(
+                labelText: 'Reason for disabling',
+                hintText: 'Enter reason (e.g., suspicious activity)',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              maxLines: 3,
+            ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              if (reasonController.text.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please enter a reason')),
+                );
+                return;
+              }
+
+              try {
+                await _firestoreService.disableUser(
+                  uid: user.uid,
+                  reason: reasonController.text,
+                );
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Account disabled successfully'),
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error: ${e.toString()}')),
+                  );
+                }
+              }
+            },
+            child: Text(
+              'Disable',
+              style: TextStyle(color: AppConstants.errorColor),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEnableUserDialog(BuildContext context, UserModel user) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Enable Account'),
+        content: Text(
+          'Are you sure you want to enable ${user.name}\'s account? They will be able to access the system again.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              try {
+                await _firestoreService.enableUser(user.uid);
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Account enabled successfully'),
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error: ${e.toString()}')),
+                  );
+                }
+              }
+            },
+            child: Text(
+              'Enable',
+              style: TextStyle(color: AppConstants.successColor),
+            ),
           ),
         ],
       ),

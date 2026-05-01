@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'auth_service.dart';
+import 'account_disabled_page.dart';
 import 'registration_page.dart';
 import '../models/user_model.dart';
 import '../screens/user/user_dashboard.dart';
@@ -57,6 +58,17 @@ class _LoginPageState extends State<LoginPage> {
       }
 
       if (mounted) {
+        if (user.isDisabled) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => AccountDisabledPage(
+                reason: user.disabledReason ?? '',
+              ),
+            ),
+          );
+          return;
+        }
         // Navigate based on role
         if (user.role == 'admin') {
           Navigator.pushReplacement(
