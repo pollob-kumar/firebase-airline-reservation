@@ -45,8 +45,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
       );
 
       if (mounted) {
-        AppConstants.showSnackBar(context, 'Registration successful! Please login.');
-        Navigator.pop(context);
+        Navigator.pop(context, 'Registration successful! Please login.');
       }
     } catch (e) {
       if (mounted) {

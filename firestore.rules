@@ -34,9 +34,12 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow create: if isSignedIn() && request.auth.uid == userId;
-      allow read: if isSignedIn() && request.auth.uid == userId;
-      allow update: if (isSignedIn() && request.auth.uid == userId && request.resource.data.diff(resource.data).changedKeys().hasOnly(['name', 'email', 'displayName']))
-                    || (isAdmin() && request.resource.data.diff(resource.data).changedKeys().hasOnly(['status', 'disabledReason']));
+      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow update: if (isSignedIn()
+          && request.auth.uid == userId
+          && request.resource.data.diff(resource.data).changedKeys().hasOnly(['name', 'email', 'displayName']))
+          || (isAdmin()
+          && request.resource.data.diff(resource.data).changedKeys().hasOnly(['status', 'disabledReason', 'disabledAt']));
       allow delete: if false;
     }
 
@@ -61,7 +64,8 @@ service cloud.firestore {
 
     match /notifications/{notificationId} {
       allow create: if isSignedIn() || isAdmin();
-      allow read: if isSignedIn() && (resource.data.recipientId == request.auth.uid || resource.data.targetRole == 'admin');
+      allow read: if isSignedIn() && (resource.data.recipientId == request.auth.uid
+        || (isAdmin() && resource.data.targetRole == 'admin'));
       allow update: if isSignedIn() && (resource.data.recipientId == request.auth.uid || isAdmin());
       allow delete: if false;
     }

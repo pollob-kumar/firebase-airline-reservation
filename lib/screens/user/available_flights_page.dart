@@ -143,7 +143,8 @@ class _AvailableFlightsPageState extends State<AvailableFlightsPage> {
                               ),
                             ),
                           );
-                          if (booked == true && mounted) {
+                          if (!context.mounted) return;
+                          if (booked == true) {
                             AppConstants.showSnackBar(
                               context,
                               'Booking request submitted successfully.',
@@ -311,7 +312,8 @@ class _AvailableFlightsPageState extends State<AvailableFlightsPage> {
                                         ),
                                       ),
                                     );
-                                    if (booked == true && mounted) {
+                                    if (!context.mounted) return;
+                                    if (booked == true) {
                                       AppConstants.showSnackBar(
                                         context,
                                         'Booking request submitted successfully.',

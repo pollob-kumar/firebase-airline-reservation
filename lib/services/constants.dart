@@ -80,6 +80,11 @@ class AppConstants {
     final String message = error.toString().replaceFirst('Exception: ', '');
     final String lowerMessage = message.toLowerCase();
 
+    if (lowerMessage.contains('invalid-credential') ||
+        lowerMessage.contains('invalid-login-credentials') ||
+        lowerMessage.contains('invalid login credentials')) {
+      return 'Wrong email or password. Please try again.';
+    }
     if (lowerMessage.contains('wrong-password')) {
       return 'Wrong password. Please try again.';
     }

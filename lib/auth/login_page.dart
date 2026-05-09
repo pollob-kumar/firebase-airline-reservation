@@ -255,13 +255,17 @@ class _LoginPageState extends State<LoginPage> {
                           children: [
                             const Text("Don't have an account? "),
                             TextButton(
-                              onPressed: () {
-                                Navigator.push(
+                              onPressed: () async {
+                                final result = await Navigator.push(
                                   context,
                                   MaterialPageRoute(
                                     builder: (_) => const RegistrationPage(),
                                   ),
                                 );
+                                if (!context.mounted) return;
+                                if (result is String && result.isNotEmpty) {
+                                  AppConstants.showSnackBar(context, result);
+                                }
                               },
                               child: const Text(
                                 'Register',

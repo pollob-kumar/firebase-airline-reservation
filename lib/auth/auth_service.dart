@@ -90,6 +90,9 @@ class AuthService {
 
   String _friendlyAuthError(FirebaseAuthException error) {
     switch (error.code) {
+      case 'invalid-credential':
+      case 'invalid-login-credentials':
+        return 'Wrong email or password. Please try again.';
       case 'wrong-password':
         return 'Wrong password. Please try again.';
       case 'user-not-found':
