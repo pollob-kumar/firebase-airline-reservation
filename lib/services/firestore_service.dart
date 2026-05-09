@@ -12,6 +12,26 @@ class FirestoreService {
     await _db.collection('users').doc(user.uid).set(user.toMap());
   }
 
+  Future<void> createAdminNotification({
+    required String title,
+    required String message,
+    required String type,
+    String? bookingId,
+  }) async {
+    final data = <String, dynamic>{
+      'title': title,
+      'message': message,
+      'type': type,
+      'targetRole': 'admin',
+      'createdAt': FieldValue.serverTimestamp(),
+      'read': false,
+    };
+    if (bookingId != null) {
+      data['bookingId'] = bookingId;
+    }
+    await _db.collection('notifications').add(data);
+  }
+
   Future<UserModel?> getUser(String uid) async {
     final doc = await _db.collection('users').doc(uid).get();
     if (doc.exists) {

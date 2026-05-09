@@ -44,9 +44,27 @@ class _RegistrationPageState extends State<RegistrationPage> {
         role: _isAdminRegistration ? 'admin' : 'user',
       );
 
-      if (mounted) {
-        Navigator.pop(context, 'Registration successful! Please login.');
+      if (!mounted) {
+        return;
       }
+
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Registration Successful'),
+          content: const Text('Your account has been created. Please login.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+      if (!mounted) {
+        return;
+      }
+      Navigator.pop(context, 'Registration successful! Please login.');
     } catch (e) {
       if (mounted) {
         AppConstants.showSnackBar(

@@ -243,7 +243,29 @@ class _AdminDashboardState extends State<AdminDashboard> {
       context,
       duration: const Duration(milliseconds: 350),
       curve: Curves.easeInOut,
+      alignment: 0.04,
     );
+  }
+
+  void _scrollToTop() {
+    if (!_scrollController.hasClients) {
+      return;
+    }
+    _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  void _scrollToFlightManagement(BuildContext context) {
+    _closeDrawerIfOpen(context);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      _scrollToSection(_flightManagementKey);
+    });
   }
 
   Widget _buildProfileTile({
@@ -1252,14 +1274,16 @@ class _AdminDashboardState extends State<AdminDashboard> {
             icon: Icons.dashboard,
             label: 'Dashboard',
             selected: true,
-            onTap: () => _closeDrawerIfOpen(context),
+            onTap: () {
+              _closeDrawerIfOpen(context);
+              _scrollToTop();
+            },
           ),
           _buildSidebarItem(
             icon: Icons.flight,
             label: 'Flight Management',
             onTap: () {
-              _closeDrawerIfOpen(context);
-              _scrollToSection(_flightManagementKey);
+              _scrollToFlightManagement(context);
             },
           ),
           _buildSidebarItem(

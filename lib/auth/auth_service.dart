@@ -49,6 +49,11 @@ class AuthService {
       );
 
       await _firestoreService.createUser(newUser);
+      await _firestoreService.createAdminNotification(
+        title: 'New user registration',
+        message: '${name.isNotEmpty ? name : email} created a $role account.',
+        type: 'new_user',
+      );
       return newUser;
     } on FirebaseAuthException catch (e) {
       throw Exception(_friendlyAuthError(e));
@@ -89,7 +94,8 @@ class AuthService {
   }
 
   String _friendlyAuthError(FirebaseAuthException error) {
-    switch (error.code) {
+    final code = error.code.toLowerCase();
+    switch (code) {
       case 'invalid-credential':
       case 'invalid-login-credentials':
         return 'Wrong email or password. Please try again.';

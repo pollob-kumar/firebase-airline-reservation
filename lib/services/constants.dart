@@ -82,8 +82,14 @@ class AppConstants {
 
     if (lowerMessage.contains('invalid-credential') ||
         lowerMessage.contains('invalid-login-credentials') ||
-        lowerMessage.contains('invalid login credentials')) {
+        lowerMessage.contains('invalid login credentials') ||
+        lowerMessage.contains('password is invalid') ||
+        lowerMessage.contains('user does not have a password')) {
       return 'Wrong email or password. Please try again.';
+    }
+    if (lowerMessage.contains('no user record') ||
+        lowerMessage.contains('user record') && lowerMessage.contains('does not exist')) {
+      return 'No account found with this email.';
     }
     if (lowerMessage.contains('wrong-password')) {
       return 'Wrong password. Please try again.';
