@@ -41,9 +41,6 @@ class AppConstants {
     final Color backgroundColor = isError ? errorColor : successColor;
     final String title = isError ? 'Error' : 'Success';
     final IconData icon = isError ? Icons.error_outline : Icons.check_circle_outline;
-    final double maxWidth = MediaQuery.of(context).size.width - 32;
-    final double snackWidth = maxWidth < 360 ? maxWidth : 360;
-
     final ScaffoldMessengerState? messenger =
         messengerKey.currentState ?? ScaffoldMessenger.maybeOf(context);
 
@@ -70,7 +67,6 @@ class AppConstants {
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 3),
         margin: const EdgeInsets.all(16),
-        width: snackWidth,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );

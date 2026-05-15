@@ -223,24 +223,21 @@ class BookingOverviewPage extends StatelessWidget {
       );
     }
 
-    final bool showConfirm =
-        status == 'pending' || status == 'cancel_requested';
+    final bool canConfirm = status != 'confirmed';
     return Row(
       children: [
-        if (showConfirm) ...[
-          Expanded(
-            child: ElevatedButton.icon(
-              onPressed: () => _confirmBooking(context, booking),
-              icon: const Icon(Icons.check),
-              label: const Text('Confirm'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppConstants.successColor,
-                foregroundColor: Colors.white,
-              ),
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: canConfirm ? () => _confirmBooking(context, booking) : null,
+            icon: const Icon(Icons.check),
+            label: const Text('Confirm'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppConstants.successColor,
+              foregroundColor: Colors.white,
             ),
           ),
-          const SizedBox(width: 12),
-        ],
+        ),
+        const SizedBox(width: 12),
         Expanded(
           child: OutlinedButton.icon(
             onPressed: () => _cancelBooking(context, booking),

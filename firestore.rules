@@ -10,6 +10,10 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
+    function bookingStatusUpdateKeys() {
+      return ['status', 'confirmedAt', 'cancelledAt', 'cancelReason', 'cancelRequestedAt'];
+    }
+
     function isSeatDecrement() {
       return isSignedIn()
         && request.resource.data.diff(resource.data).changedKeys().hasOnly(['availableSeats'])
@@ -37,9 +41,11 @@ service cloud.firestore {
       allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
       allow update: if (isSignedIn()
           && request.auth.uid == userId
-          && request.resource.data.diff(resource.data).changedKeys().hasOnly(['name', 'email', 'displayName']))
+          && request.resource.data.diff(resource.data).changedKeys().hasOnly(['name', 'email', 'displayName', 'balance'])
+          && request.resource.data.balance is number)
           || (isAdmin()
-          && request.resource.data.diff(resource.data).changedKeys().hasOnly(['status', 'disabledReason', 'disabledAt']));
+          && request.resource.data.diff(resource.data).changedKeys().hasOnly(['status', 'disabledReason', 'disabledAt', 'balance'])
+          && request.resource.data.balance is number);
       allow delete: if false;
     }
 
@@ -52,7 +58,14 @@ service cloud.firestore {
     match /bookings/{bookingId} {
       allow create: if isSignedIn() && request.auth.uid == request.resource.data.userId;
       allow read: if isAdmin() || (isSignedIn() && request.auth.uid == resource.data.userId);
-      allow update, delete: if false;
+      allow update: if (isAdmin()
+          && request.resource.data.diff(resource.data).changedKeys().hasOnly(bookingStatusUpdateKeys()))
+          || (isSignedIn()
+          && request.auth.uid == resource.data.userId
+          && request.resource.data.diff(resource.data).changedKeys().hasOnly(['status', 'cancelRequestedAt'])
+          && resource.data.status == 'confirmed'
+          && request.resource.data.status == 'cancel_requested');
+      allow delete: if false;
     }
 
     match /adminStats/{doc} {
