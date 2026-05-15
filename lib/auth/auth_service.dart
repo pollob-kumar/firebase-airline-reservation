@@ -18,7 +18,7 @@ class AuthService {
       );
       return await _firestoreService.getUser(result.user!.uid);
     } on FirebaseAuthException catch (e) {
-      throw Exception(_friendlyAuthError(e));
+      throw Exception(_friendlyLoginError(e));
     } catch (e) {
       throw Exception('Login failed. Please try again.');
     }
@@ -98,7 +98,7 @@ class AuthService {
     switch (code) {
       case 'invalid-credential':
       case 'invalid-login-credentials':
-        return 'Wrong email or password. Please try again.';
+        return 'Wrong email or password';
       case 'wrong-password':
         return 'Wrong password. Please try again.';
       case 'user-not-found':
@@ -117,6 +117,25 @@ class AuthService {
         return 'This operation is not allowed. Please contact support.';
       default:
         return 'Authentication failed. Please try again.';
+    }
+  }
+
+  String _friendlyLoginError(FirebaseAuthException error) {
+    final code = error.code.toLowerCase();
+    switch (code) {
+      case 'invalid-credential':
+      case 'invalid-login-credentials':
+      case 'wrong-password':
+      case 'user-not-found':
+        return 'Wrong email or password. Please try again.';
+      case 'invalid-email':
+        return 'Please enter a valid email address.';
+      case 'user-disabled':
+        return 'This account has been disabled.';
+      case 'too-many-requests':
+        return 'Too many attempts. Please try again later.';
+      default:
+        return 'Login failed. Please try again.';
     }
   }
 }

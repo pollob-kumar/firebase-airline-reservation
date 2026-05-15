@@ -625,7 +625,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
         final double revenue = bookings
             .where((booking) {
               return booking.bookingDate.year == now.year &&
-                  booking.bookingDate.month == now.month;
+                  booking.bookingDate.month == now.month &&
+                  booking.status.toLowerCase() == 'confirmed';
             })
             .fold(0.0, (sum, booking) => sum + booking.price);
         return _buildStatCard(
