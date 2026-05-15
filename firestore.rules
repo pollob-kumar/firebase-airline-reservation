@@ -1,0 +1,69 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn()
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isSeatDecrement() {
+      return isSignedIn()
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly(['availableSeats'])
+        && request.resource.data.availableSeats is int
+        && request.resource.data.availableSeats == resource.data.availableSeats - 1
+        && request.resource.data.availableSeats >= 0;
+    }
+
+    function canCreateAdminStats() {
+      return isSignedIn()
+        && request.resource.data.keys().hasOnly(['totalIncome', 'lastUpdated'])
+        && request.resource.data.totalIncome is number
+        && request.resource.data.totalIncome >= 0;
+    }
+
+    function canUpdateAdminStats() {
+      return isSignedIn()
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly(['totalIncome', 'lastUpdated'])
+        && request.resource.data.totalIncome is number
+        && request.resource.data.totalIncome >= resource.data.totalIncome;
+    }
+
+    match /users/{userId} {
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow read: if isSignedIn() && request.auth.uid == userId;
+      allow update: if (isSignedIn() && request.auth.uid == userId && request.resource.data.diff(resource.data).changedKeys().hasOnly(['name', 'email', 'displayName']))
+                    || (isAdmin() && request.resource.data.diff(resource.data).changedKeys().hasOnly(['status', 'disabledReason']));
+      allow delete: if false;
+    }
+
+    match /flights/{flightId} {
+      allow read: if isSignedIn();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || isSeatDecrement();
+    }
+
+    match /bookings/{bookingId} {
+      allow create: if isSignedIn() && request.auth.uid == request.resource.data.userId;
+      allow read: if isAdmin() || (isSignedIn() && request.auth.uid == resource.data.userId);
+      allow update, delete: if false;
+    }
+
+    match /adminStats/{doc} {
+      allow read: if isAdmin();
+      allow create: if isAdmin() || canCreateAdminStats();
+      allow update: if isAdmin() || canUpdateAdminStats();
+      allow delete: if isAdmin();
+    }
+
+    match /notifications/{notificationId} {
+      allow create: if isSignedIn() || isAdmin();
+      allow read: if isSignedIn() && (resource.data.recipientId == request.auth.uid || resource.data.targetRole == 'admin');
+      allow update: if isSignedIn() && (resource.data.recipientId == request.auth.uid || isAdmin());
+      allow delete: if false;
+    }
+  }
+}
