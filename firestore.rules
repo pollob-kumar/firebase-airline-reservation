@@ -75,6 +75,12 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    match /adminSettings/{doc} {
+      allow read: if isAdmin();
+      allow create, update: if isAdmin();
+      allow delete: if false;
+    }
+
     match /notifications/{notificationId} {
       allow create: if isSignedIn() || isAdmin();
       allow read: if isSignedIn() && (resource.data.recipientId == request.auth.uid
