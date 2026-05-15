@@ -406,20 +406,7 @@ class _UserDashboardState extends State<UserDashboard> {
           onPressed: _loadUserData,
           icon: const Icon(Icons.refresh, color: AppConstants.textPrimary),
         ),
-        IconButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => UserNotificationsPage(userId: widget.user.uid),
-              ),
-            );
-          },
-          icon: const Icon(
-            Icons.notifications_none,
-            color: AppConstants.textPrimary,
-          ),
-        ),
+        _buildNotificationAction(context),
         const SizedBox(width: 8),
         GestureDetector(
           onTap: _openProfileSheet,
@@ -432,6 +419,62 @@ class _UserDashboardState extends State<UserDashboard> {
                 fontWeight: FontWeight.bold,
                 color: AppConstants.primaryColor,
               ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNotificationAction(BuildContext context) {
+    return StreamBuilder<bool>(
+      stream: _firestoreService.hasUnreadUserNotifications(widget.user.uid),
+      builder: (context, snapshot) {
+        final bool hasUnread = snapshot.data ?? false;
+        final Color iconColor = hasUnread
+            ? AppConstants.accentColor
+            : AppConstants.textPrimary;
+        return IconButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => UserNotificationsPage(userId: widget.user.uid),
+              ),
+            );
+          },
+          icon: _buildNotificationIcon(
+            iconColor: iconColor,
+            badgeColor: AppConstants.accentColor,
+            showBadge: hasUnread,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildNotificationIcon({
+    required Color iconColor,
+    required Color badgeColor,
+    required bool showBadge,
+  }) {
+    final Widget icon = Icon(Icons.notifications_none, color: iconColor);
+    if (!showBadge) {
+      return icon;
+    }
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        icon,
+        Positioned(
+          right: 0,
+          top: 0,
+          child: Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: badgeColor,
+              shape: BoxShape.circle,
             ),
           ),
         ),

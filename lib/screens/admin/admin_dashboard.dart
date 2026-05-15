@@ -471,17 +471,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         final Widget actions = Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            IconButton(
-              icon: const Icon(Icons.notifications_none),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const AdminNotificationsPage(),
-                  ),
-                );
-              },
-            ),
+            _buildNotificationAction(),
             GestureDetector(
               onTap: _openProfileSheet,
               child: CircleAvatar(
@@ -524,6 +514,60 @@ class _AdminDashboardState extends State<AdminDashboard> {
           ],
         );
       },
+    );
+  }
+
+  Widget _buildNotificationAction() {
+    return StreamBuilder<bool>(
+      stream: _firestoreService.hasUnreadAdminNotifications(),
+      builder: (context, snapshot) {
+        final bool hasUnread = snapshot.data ?? false;
+        final Color iconColor = hasUnread
+            ? AppConstants.warningColor
+            : AppConstants.textSecondary;
+        return IconButton(
+          icon: _buildNotificationIcon(
+            iconColor: iconColor,
+            badgeColor: AppConstants.warningColor,
+            showBadge: hasUnread,
+          ),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AdminNotificationsPage()),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildNotificationIcon({
+    required Color iconColor,
+    required Color badgeColor,
+    required bool showBadge,
+  }) {
+    final Widget icon = Icon(Icons.notifications_none, color: iconColor);
+    if (!showBadge) {
+      return icon;
+    }
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        icon,
+        Positioned(
+          right: 0,
+          top: 0,
+          child: Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: badgeColor,
+              shape: BoxShape.circle,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -1298,16 +1342,23 @@ class _AdminDashboardState extends State<AdminDashboard> {
               );
             },
           ),
-          _buildSidebarItem(
-            icon: Icons.notifications_none,
-            label: 'Notifications',
-            onTap: () {
-              _closeDrawerIfOpen(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const AdminNotificationsPage(),
-                ),
+          StreamBuilder<bool>(
+            stream: _firestoreService.hasUnreadAdminNotifications(),
+            builder: (context, snapshot) {
+              final bool hasUnread = snapshot.data ?? false;
+              return _buildSidebarItem(
+                icon: Icons.notifications_none,
+                label: 'Notifications',
+                highlight: hasUnread,
+                onTap: () {
+                  _closeDrawerIfOpen(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const AdminNotificationsPage(),
+                    ),
+                  );
+                },
               );
             },
           ),
@@ -1367,10 +1418,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
     required VoidCallback onTap,
     bool selected = false,
     bool isDestructive = false,
+    bool highlight = false,
   }) {
     final Color baseColor = isDestructive
         ? AppConstants.errorColor
         : selected
+        ? AppConstants.warningColor
+        : highlight
         ? AppConstants.warningColor
         : AppConstants.textSecondary;
     return InkWell(
@@ -1382,6 +1436,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
         decoration: BoxDecoration(
           color: selected
               ? AppConstants.warningColor.withValues(alpha: 0.12)
+              : highlight
+              ? AppConstants.warningColor.withValues(alpha: 0.08)
               : null,
           borderRadius: BorderRadius.circular(12),
         ),

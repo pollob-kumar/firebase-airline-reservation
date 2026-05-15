@@ -422,6 +422,20 @@ class FirestoreService {
         });
   }
 
+  Stream<bool> hasUnreadUserNotifications(String userId) {
+    return getUserNotifications(userId).map(
+      (notifications) =>
+          notifications.any((notification) => !notification.read),
+    );
+  }
+
+  Stream<bool> hasUnreadAdminNotifications() {
+    return getAdminNotifications().map(
+      (notifications) =>
+          notifications.any((notification) => !notification.read),
+    );
+  }
+
   Future<void> markNotificationRead(String notificationId) async {
     await _db.collection('notifications').doc(notificationId).update({
       'read': true,
