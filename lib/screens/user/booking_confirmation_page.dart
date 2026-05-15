@@ -15,7 +15,8 @@ class BookingConfirmationPage extends StatefulWidget {
   });
 
   @override
-  State<BookingConfirmationPage> createState() => _BookingConfirmationPageState();
+  State<BookingConfirmationPage> createState() =>
+      _BookingConfirmationPageState();
 }
 
 class _BookingConfirmationPageState extends State<BookingConfirmationPage> {
@@ -201,7 +202,8 @@ class _BookingConfirmationPageState extends State<BookingConfirmationPage> {
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: (widget.user.balance - widget.flight.price) >= 0
+                            color:
+                                (widget.user.balance - widget.flight.price) >= 0
                                 ? AppConstants.successColor
                                 : AppConstants.errorColor,
                           ),
@@ -221,10 +223,7 @@ class _BookingConfirmationPageState extends State<BookingConfirmationPage> {
                 decoration: BoxDecoration(
                   color: AppConstants.errorColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: AppConstants.errorColor,
-                    width: 1,
-                  ),
+                  border: Border.all(color: AppConstants.errorColor, width: 1),
                 ),
                 child: const Row(
                   children: [
@@ -285,19 +284,10 @@ class _BookingConfirmationPageState extends State<BookingConfirmationPage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey[600],
-          ),
-        ),
+        Text(label, style: TextStyle(fontSize: 14, color: Colors.grey[600])),
         Text(
           value,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
         ),
       ],
     );

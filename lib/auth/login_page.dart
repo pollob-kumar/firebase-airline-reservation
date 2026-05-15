@@ -62,9 +62,8 @@ class _LoginPageState extends State<LoginPage> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (_) => AccountDisabledPage(
-                reason: user.disabledReason ?? '',
-              ),
+              builder: (_) =>
+                  AccountDisabledPage(reason: user.disabledReason ?? ''),
             ),
           );
           return;
@@ -125,10 +124,7 @@ class _LoginPageState extends State<LoginPage> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              AppConstants.primaryColor,
-              AppConstants.secondaryColor,
-            ],
+            colors: [AppConstants.primaryColor, AppConstants.secondaryColor],
           ),
         ),
         child: SafeArea(
@@ -151,7 +147,9 @@ class _LoginPageState extends State<LoginPage> {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: AppConstants.primaryColor.withValues(alpha: 0.1),
+                            color: AppConstants.primaryColor.withValues(
+                              alpha: 0.1,
+                            ),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -161,7 +159,7 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
                         const SizedBox(height: 24),
-                        
+
                         // Title
                         const Text(
                           'Airline Reservation',
@@ -206,10 +204,14 @@ class _LoginPageState extends State<LoginPage> {
                             prefixIcon: const Icon(Icons.lock_outline),
                             suffixIcon: IconButton(
                               icon: Icon(
-                                _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                _obscurePassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
                               ),
                               onPressed: () {
-                                setState(() => _obscurePassword = !_obscurePassword);
+                                setState(
+                                  () => _obscurePassword = !_obscurePassword,
+                                );
                               },
                             ),
                             border: OutlineInputBorder(

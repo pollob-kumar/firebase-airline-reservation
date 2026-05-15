@@ -118,11 +118,7 @@ class UserNotificationsPage extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.notifications_none,
-            size: 72,
-            color: Colors.grey[400],
-          ),
+          Icon(Icons.notifications_none, size: 72, color: Colors.grey[400]),
           const SizedBox(height: 12),
           Text(message, style: TextStyle(color: Colors.grey[600])),
         ],
@@ -181,13 +177,12 @@ class UserNotificationDetailsPage extends StatelessWidget {
             if (notification.bookingId != null)
               Expanded(
                 child: StreamBuilder<BookingModel?>(
-                  stream:
-                      firestoreService.getBookingById(notification.bookingId!),
+                  stream: firestoreService.getBookingById(
+                    notification.bookingId!,
+                  ),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(
-                        child: CircularProgressIndicator(),
-                      );
+                      return const Center(child: CircularProgressIndicator());
                     }
                     final booking = snapshot.data;
                     if (booking == null) {
@@ -223,10 +218,7 @@ class UserNotificationDetailsPage extends StatelessWidget {
             const SizedBox(height: 8),
             _buildDetailRow('Date', booking.date),
             _buildDetailRow('Time', booking.time),
-            _buildDetailRow(
-              'Price',
-              '৳ ${booking.price.toStringAsFixed(2)}',
-            ),
+            _buildDetailRow('Price', '৳ ${booking.price.toStringAsFixed(2)}'),
             const SizedBox(height: 12),
             _buildStatusChip(booking.status),
           ],
@@ -283,10 +275,7 @@ class UserNotificationDetailsPage extends StatelessWidget {
 
   Widget _buildEmptyInfo(String message) {
     return Center(
-      child: Text(
-        message,
-        style: TextStyle(color: Colors.grey[600]),
-      ),
+      child: Text(message, style: TextStyle(color: Colors.grey[600])),
     );
   }
 }

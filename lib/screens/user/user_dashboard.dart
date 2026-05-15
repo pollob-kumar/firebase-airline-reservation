@@ -29,8 +29,9 @@ class _UserDashboardState extends State<UserDashboard> {
   final TextEditingController _originController = TextEditingController();
   final TextEditingController _destinationController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
-  final TextEditingController _passengerController =
-      TextEditingController(text: '1');
+  final TextEditingController _passengerController = TextEditingController(
+    text: '1',
+  );
 
   @override
   void initState() {
@@ -227,9 +228,9 @@ class _UserDashboardState extends State<UserDashboard> {
                       MaterialPageRoute(
                         builder: (_) => _MyBookingsPage(userId: user.uid),
                       ),
-                      );
-                    },
-                  ),
+                    );
+                  },
+                ),
                 _buildProfileTile(
                   icon: Icons.settings_outlined,
                   title: 'Settings',
@@ -241,8 +242,7 @@ class _UserDashboardState extends State<UserDashboard> {
                     await Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) =>
-                            UserSettingsPage(user: _currentUser!),
+                        builder: (_) => UserSettingsPage(user: _currentUser!),
                       ),
                     );
                     _loadUserData();
@@ -411,9 +411,7 @@ class _UserDashboardState extends State<UserDashboard> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => UserNotificationsPage(
-                  userId: widget.user.uid,
-                ),
+                builder: (_) => UserNotificationsPage(userId: widget.user.uid),
               ),
             );
           },
@@ -746,24 +744,24 @@ class _UserDashboardState extends State<UserDashboard> {
                 booking.time,
                 style: const TextStyle(fontWeight: FontWeight.w600),
               ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _statusColor(booking.status).withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    _statusLabel(booking.status),
-                    style: TextStyle(
-                      color: _statusColor(booking.status),
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: _statusColor(booking.status).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  _statusLabel(booking.status),
+                  style: TextStyle(
+                    color: _statusColor(booking.status),
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
+              ),
             ],
           ),
         ],
@@ -1071,9 +1069,7 @@ class _UserDashboardState extends State<UserDashboard> {
               }
               await Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => UserSettingsPage(user: user),
-                ),
+                MaterialPageRoute(builder: (_) => UserSettingsPage(user: user)),
               );
               _loadUserData();
             },
@@ -1401,10 +1397,8 @@ class _MyBookingsPage extends StatelessWidget {
                         Align(
                           alignment: Alignment.centerRight,
                           child: OutlinedButton.icon(
-                            onPressed: () => _requestCancellation(
-                              context,
-                              booking,
-                            ),
+                            onPressed: () =>
+                                _requestCancellation(context, booking),
                             icon: const Icon(Icons.cancel_outlined),
                             label: const Text('Request Cancellation'),
                             style: OutlinedButton.styleFrom(
@@ -1515,10 +1509,7 @@ class _MyBookingsPage extends StatelessWidget {
     try {
       await FirestoreService().requestBookingCancellation(booking.id);
       if (context.mounted) {
-        AppConstants.showSnackBar(
-          context,
-          'Cancellation request sent.',
-        );
+        AppConstants.showSnackBar(context, 'Cancellation request sent.');
       }
     } catch (e) {
       if (context.mounted) {

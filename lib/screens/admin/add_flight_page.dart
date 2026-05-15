@@ -262,7 +262,9 @@ class _AddFlightPageState extends State<AddFlightPage> {
                 decoration: InputDecoration(
                   labelText: 'Total Seats',
                   hintText: 'e.g., 100',
-                  prefixIcon: const Icon(Icons.event_seat), // FIXED: Changed icon
+                  prefixIcon: const Icon(
+                    Icons.event_seat,
+                  ), // FIXED: Changed icon
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),

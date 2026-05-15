@@ -116,11 +116,7 @@ class AdminNotificationsPage extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.notifications_none,
-            size: 72,
-            color: Colors.grey[400],
-          ),
+          Icon(Icons.notifications_none, size: 72, color: Colors.grey[400]),
           const SizedBox(height: 12),
           Text(message, style: TextStyle(color: Colors.grey[600])),
         ],
@@ -180,13 +176,12 @@ class AdminNotificationDetailsPage extends StatelessWidget {
             if (notification.bookingId != null)
               Expanded(
                 child: StreamBuilder<BookingModel?>(
-                  stream:
-                      firestoreService.getBookingById(notification.bookingId!),
+                  stream: firestoreService.getBookingById(
+                    notification.bookingId!,
+                  ),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(
-                        child: CircularProgressIndicator(),
-                      );
+                      return const Center(child: CircularProgressIndicator());
                     }
                     final booking = snapshot.data;
                     if (booking == null) {
@@ -209,7 +204,9 @@ class AdminNotificationDetailsPage extends StatelessWidget {
       children: [
         Card(
           elevation: 2,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -260,7 +257,8 @@ class AdminNotificationDetailsPage extends StatelessWidget {
         if (showConfirm) ...[
           Expanded(
             child: ElevatedButton.icon(
-              onPressed: () => _confirmBooking(context, firestoreService, booking),
+              onPressed: () =>
+                  _confirmBooking(context, firestoreService, booking),
               icon: const Icon(Icons.check),
               label: const Text('Confirm'),
               style: ElevatedButton.styleFrom(
@@ -420,10 +418,7 @@ class AdminNotificationDetailsPage extends StatelessWidget {
 
   Widget _buildEmptyInfo(String message) {
     return Center(
-      child: Text(
-        message,
-        style: TextStyle(color: Colors.grey[600]),
-      ),
+      child: Text(message, style: TextStyle(color: Colors.grey[600])),
     );
   }
 

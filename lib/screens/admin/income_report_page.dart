@@ -68,10 +68,7 @@ class IncomeReportPage extends StatelessWidget {
                   const SizedBox(height: 16),
                   Text(
                     'No bookings yet',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 18, color: Colors.grey[600]),
                   ),
                 ],
               ),
@@ -119,10 +116,7 @@ class IncomeReportPage extends StatelessWidget {
                     const SizedBox(height: 12),
                     const Text(
                       'Total Income',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white70,
-                      ),
+                      style: TextStyle(fontSize: 18, color: Colors.white70),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -157,10 +151,7 @@ class IncomeReportPage extends StatelessWidget {
                     ),
                     Text(
                       '${bookings.length} total',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                     ),
                   ],
                 ),
@@ -182,7 +173,9 @@ class IncomeReportPage extends StatelessWidget {
                         leading: Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: AppConstants.primaryColor.withValues(alpha: 0.1),
+                            color: AppConstants.primaryColor.withValues(
+                              alpha: 0.1,
+                            ),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: const Icon(
@@ -235,9 +228,17 @@ class IncomeReportPage extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(height: 8),
-                                _buildDetailRow(Icons.email, 'Email', booking.userEmail),
+                                _buildDetailRow(
+                                  Icons.email,
+                                  'Email',
+                                  booking.userEmail,
+                                ),
                                 const SizedBox(height: 6),
-                                _buildDetailRow(Icons.phone, 'Phone', booking.userPhone),
+                                _buildDetailRow(
+                                  Icons.phone,
+                                  'Phone',
+                                  booking.userPhone,
+                                ),
                                 const SizedBox(height: 16),
                                 const Text(
                                   'Flight Details',
@@ -247,11 +248,23 @@ class IncomeReportPage extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(height: 8),
-                                _buildDetailRow(Icons.flight, 'Flight', booking.flightNumber),
+                                _buildDetailRow(
+                                  Icons.flight,
+                                  'Flight',
+                                  booking.flightNumber,
+                                ),
                                 const SizedBox(height: 6),
-                                _buildDetailRow(Icons.calendar_today, 'Date', booking.date),
+                                _buildDetailRow(
+                                  Icons.calendar_today,
+                                  'Date',
+                                  booking.date,
+                                ),
                                 const SizedBox(height: 6),
-                                _buildDetailRow(Icons.access_time, 'Time', booking.time),
+                                _buildDetailRow(
+                                  Icons.access_time,
+                                  'Time',
+                                  booking.time,
+                                ),
                                 const SizedBox(height: 6),
                                 _buildDetailRow(
                                   Icons.event,
@@ -287,18 +300,12 @@ class IncomeReportPage extends StatelessWidget {
         const SizedBox(width: 8),
         Text(
           '$label: ',
-          style: TextStyle(
-            fontSize: 13,
-            color: Colors.grey[700],
-          ),
+          style: TextStyle(fontSize: 13, color: Colors.grey[700]),
         ),
         Expanded(
           child: Text(
             value,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
           ),
         ),
       ],

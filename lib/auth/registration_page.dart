@@ -17,7 +17,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
   final _passwordController = TextEditingController();
   final _adminCodeController = TextEditingController();
   final AuthService _authService = AuthService();
-  
+
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _isAdminRegistration = false;
@@ -28,7 +28,11 @@ class _RegistrationPageState extends State<RegistrationPage> {
     // Validate admin code when admin registration is selected
     if (_isAdminRegistration) {
       if (_adminCodeController.text.trim() != AppConstants.adminCode) {
-        AppConstants.showSnackBar(context, 'Invalid Admin Code!', isError: true);
+        AppConstants.showSnackBar(
+          context,
+          'Invalid Admin Code!',
+          isError: true,
+        );
         return;
       }
     }
@@ -86,10 +90,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              AppConstants.primaryColor,
-              AppConstants.secondaryColor,
-            ],
+            colors: [AppConstants.primaryColor, AppConstants.secondaryColor],
           ),
         ),
         child: SafeArea(
@@ -112,7 +113,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: AppConstants.successColor.withValues(alpha: 0.1),
+                            color: AppConstants.successColor.withValues(
+                              alpha: 0.1,
+                            ),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -130,7 +133,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          _isAdminRegistration ? 'Register as Admin' : 'Register as User',
+                          _isAdminRegistration
+                              ? 'Register as Admin'
+                              : 'Register as User',
                           style: AppConstants.bodyStyle,
                         ),
                         const SizedBox(height: 24),
@@ -147,7 +152,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
                               style: TextStyle(fontWeight: FontWeight.w600),
                             ),
                             subtitle: Text(
-                              _isAdminRegistration ? 'Admin code required' : 'Regular user',
+                              _isAdminRegistration
+                                  ? 'Admin code required'
+                                  : 'Regular user',
                               style: const TextStyle(fontSize: 12),
                             ),
                             value: _isAdminRegistration,
@@ -233,10 +240,14 @@ class _RegistrationPageState extends State<RegistrationPage> {
                             prefixIcon: const Icon(Icons.lock_outline),
                             suffixIcon: IconButton(
                               icon: Icon(
-                                _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                _obscurePassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
                               ),
                               onPressed: () {
-                                setState(() => _obscurePassword = !_obscurePassword);
+                                setState(
+                                  () => _obscurePassword = !_obscurePassword,
+                                );
                               },
                             ),
                             border: OutlineInputBorder(
@@ -262,12 +273,16 @@ class _RegistrationPageState extends State<RegistrationPage> {
                             keyboardType: TextInputType.number,
                             decoration: InputDecoration(
                               labelText: 'Admin Code',
-                              prefixIcon: const Icon(Icons.admin_panel_settings),
+                              prefixIcon: const Icon(
+                                Icons.admin_panel_settings,
+                              ),
                               hintText: 'Enter admin code',
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              fillColor: AppConstants.warningColor.withValues(alpha: 0.1),
+                              fillColor: AppConstants.warningColor.withValues(
+                                alpha: 0.1,
+                              ),
                               filled: true,
                             ),
                             validator: (value) {
@@ -287,8 +302,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
                           child: ElevatedButton(
                             onPressed: _isLoading ? null : _register,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: _isAdminRegistration 
-                                  ? AppConstants.warningColor 
+                              backgroundColor: _isAdminRegistration
+                                  ? AppConstants.warningColor
                                   : AppConstants.successColor,
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
@@ -305,7 +320,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
                                     ),
                                   )
                                 : Text(
-                                    _isAdminRegistration ? 'Register as Admin' : 'Register',
+                                    _isAdminRegistration
+                                        ? 'Register as Admin'
+                                        : 'Register',
                                     style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,

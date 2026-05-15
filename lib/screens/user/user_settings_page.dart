@@ -54,7 +54,10 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
 
     setState(() => _updatingProfile = true);
     try {
-      await _firestoreService.updateUserProfile(uid: widget.user.uid, name: name);
+      await _firestoreService.updateUserProfile(
+        uid: widget.user.uid,
+        name: name,
+      );
       await _authService.updateDisplayName(name);
       if (mounted) {
         AppConstants.showSnackBar(context, 'Profile updated successfully.');
@@ -228,7 +231,9 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                         prefixIcon: const Icon(Icons.lock_reset),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _obscureNew ? Icons.visibility_off : Icons.visibility,
+                            _obscureNew
+                                ? Icons.visibility_off
+                                : Icons.visibility,
                           ),
                           onPressed: () {
                             setState(() => _obscureNew = !_obscureNew);

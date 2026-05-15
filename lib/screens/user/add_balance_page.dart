@@ -23,7 +23,11 @@ class _AddBalancePageState extends State<AddBalancePage> {
     final amount = double.tryParse(_amountController.text);
 
     if (amount == null || amount <= 0) {
-      AppConstants.showSnackBar(context, 'Please enter a valid amount', isError: true);
+      AppConstants.showSnackBar(
+        context,
+        'Please enter a valid amount',
+        isError: true,
+      );
       return;
     }
 
@@ -88,10 +92,7 @@ class _AddBalancePageState extends State<AddBalancePage> {
                   children: [
                     const Text(
                       'Current Balance',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.white70,
-                      ),
+                      style: TextStyle(fontSize: 16, color: Colors.white70),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -109,10 +110,7 @@ class _AddBalancePageState extends State<AddBalancePage> {
             const SizedBox(height: 32),
 
             // Quick Amount Buttons
-            const Text(
-              'Quick Add',
-              style: AppConstants.subHeadingStyle,
-            ),
+            const Text('Quick Add', style: AppConstants.subHeadingStyle),
             const SizedBox(height: 12),
             Wrap(
               spacing: 12,

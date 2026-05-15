@@ -228,7 +228,9 @@ class BookingOverviewPage extends StatelessWidget {
       children: [
         Expanded(
           child: ElevatedButton.icon(
-            onPressed: canConfirm ? () => _confirmBooking(context, booking) : null,
+            onPressed: canConfirm
+                ? () => _confirmBooking(context, booking)
+                : null,
             icon: const Icon(Icons.check),
             label: const Text('Confirm'),
             style: ElevatedButton.styleFrom(
@@ -253,7 +255,10 @@ class BookingOverviewPage extends StatelessWidget {
     );
   }
 
-  Future<void> _confirmBooking(BuildContext context, BookingModel booking) async {
+  Future<void> _confirmBooking(
+    BuildContext context,
+    BookingModel booking,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -292,7 +297,10 @@ class BookingOverviewPage extends StatelessWidget {
     }
   }
 
-  Future<void> _cancelBooking(BuildContext context, BookingModel booking) async {
+  Future<void> _cancelBooking(
+    BuildContext context,
+    BookingModel booking,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(

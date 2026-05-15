@@ -271,7 +271,8 @@ class FirestoreService {
       }
 
       final currentBalance = (userSnapshot.data()!['balance'] ?? 0).toDouble();
-      final currentSeats = (flightSnapshot.data()!['availableSeats'] ?? 0) as num;
+      final currentSeats =
+          (flightSnapshot.data()!['availableSeats'] ?? 0) as num;
 
       transaction.update(userRef, {'balance': currentBalance + price});
       transaction.update(flightRef, {
@@ -397,33 +398,34 @@ class FirestoreService {
     return _db
         .collection('notifications')
         .where('recipientId', isEqualTo: userId)
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
+        .map((snapshot) {
+          final notifications = snapshot.docs
               .map((doc) => NotificationModel.fromMap(doc.data(), doc.id))
-              .toList(),
-        );
+              .toList();
+          notifications.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return notifications;
+        });
   }
 
   Stream<List<NotificationModel>> getAdminNotifications() {
     return _db
         .collection('notifications')
         .where('targetRole', isEqualTo: 'admin')
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
+        .map((snapshot) {
+          final notifications = snapshot.docs
               .map((doc) => NotificationModel.fromMap(doc.data(), doc.id))
-              .toList(),
-        );
+              .toList();
+          notifications.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return notifications;
+        });
   }
 
   Future<void> markNotificationRead(String notificationId) async {
-    await _db
-        .collection('notifications')
-        .doc(notificationId)
-        .update({'read': true});
+    await _db.collection('notifications').doc(notificationId).update({
+      'read': true,
+    });
   }
 
   Stream<Map<String, dynamic>> getAdminSettings() {

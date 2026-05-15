@@ -300,13 +300,20 @@ class _AdminSettingsPageState extends State<AdminSettingsPage> {
   Future<void> _saveProfile() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
-      AppConstants.showSnackBar(context, 'Name cannot be empty.', isError: true);
+      AppConstants.showSnackBar(
+        context,
+        'Name cannot be empty.',
+        isError: true,
+      );
       return;
     }
 
     setState(() => _updatingProfile = true);
     try {
-      await _firestoreService.updateUserProfile(uid: widget.user.uid, name: name);
+      await _firestoreService.updateUserProfile(
+        uid: widget.user.uid,
+        name: name,
+      );
       await _authService.updateDisplayName(name);
       if (mounted) {
         AppConstants.showSnackBar(context, 'Profile updated successfully.');

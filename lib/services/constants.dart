@@ -6,7 +6,7 @@ class AppConstants {
 
   static final GlobalKey<ScaffoldMessengerState> messengerKey =
       GlobalKey<ScaffoldMessengerState>();
-  
+
   // Colors
   static const Color primaryColor = Color(0xFF1B3A57);
   static const Color secondaryColor = Color(0xFF145DA0);
@@ -17,30 +17,36 @@ class AppConstants {
   static const Color scaffoldBackground = Color(0xFFF5F7FB);
   static const Color textPrimary = Color(0xFF0F172A);
   static const Color textSecondary = Color(0xFF475569);
-  
+
   // Text Styles
   static const TextStyle headingStyle = TextStyle(
     fontSize: 26,
     fontWeight: FontWeight.w700,
     color: textPrimary,
   );
-  
+
   static const TextStyle subHeadingStyle = TextStyle(
     fontSize: 18,
     fontWeight: FontWeight.w600,
     color: textPrimary,
   );
-  
+
   static const TextStyle bodyStyle = TextStyle(
     fontSize: 14,
     color: textSecondary,
   );
-  
+
   // Common Functions
-  static void showSnackBar(BuildContext context, String message, {bool isError = false}) {
+  static void showSnackBar(
+    BuildContext context,
+    String message, {
+    bool isError = false,
+  }) {
     final Color backgroundColor = isError ? errorColor : successColor;
     final String title = isError ? 'Error' : 'Success';
-    final IconData icon = isError ? Icons.error_outline : Icons.check_circle_outline;
+    final IconData icon = isError
+        ? Icons.error_outline
+        : Icons.check_circle_outline;
     final ScaffoldMessengerState? messenger =
         messengerKey.currentState ?? ScaffoldMessenger.maybeOf(context);
 
@@ -84,7 +90,8 @@ class AppConstants {
       return 'Wrong email or password. Please try again.';
     }
     if (lowerMessage.contains('no user record') ||
-        lowerMessage.contains('user record') && lowerMessage.contains('does not exist')) {
+        lowerMessage.contains('user record') &&
+            lowerMessage.contains('does not exist')) {
       return 'No account found with this email.';
     }
     if (lowerMessage.contains('wrong-password')) {

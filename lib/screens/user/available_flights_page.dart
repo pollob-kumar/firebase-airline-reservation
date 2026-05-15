@@ -44,7 +44,6 @@ class _AvailableFlightsPageState extends State<AvailableFlightsPage> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Available Flights'),
@@ -103,10 +102,7 @@ class _AvailableFlightsPageState extends State<AvailableFlightsPage> {
                   const SizedBox(height: 16),
                   Text(
                     'No flights available',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 18, color: Colors.grey[600]),
                   ),
                 ],
               ),
@@ -165,7 +161,9 @@ class _AvailableFlightsPageState extends State<AvailableFlightsPage> {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: AppConstants.primaryColor.withValues(alpha: 0.1),
+                                color: AppConstants.primaryColor.withValues(
+                                  alpha: 0.1,
+                                ),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Icon(
@@ -359,20 +357,11 @@ class _AvailableFlightsPageState extends State<AvailableFlightsPage> {
       children: [
         Icon(icon, size: 20, color: Colors.grey[600]),
         const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[600],
-          ),
-        ),
+        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
         const SizedBox(height: 2),
         Text(
           value,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
         ),
       ],
     );
@@ -385,8 +374,7 @@ class _AvailableFlightsPageState extends State<AvailableFlightsPage> {
     final int? passengers = widget.passengers;
 
     return flights.where((flight) {
-      if (origin.isNotEmpty &&
-          !flight.from.toLowerCase().contains(origin)) {
+      if (origin.isNotEmpty && !flight.from.toLowerCase().contains(origin)) {
         return false;
       }
       if (destination.isNotEmpty &&
@@ -408,11 +396,7 @@ class _AvailableFlightsPageState extends State<AvailableFlightsPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.search_off,
-            size: 80,
-            color: Colors.grey[400],
-          ),
+          Icon(Icons.search_off, size: 80, color: Colors.grey[400]),
           const SizedBox(height: 16),
           Text(
             message,
