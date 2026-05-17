@@ -23,6 +23,38 @@ class IncomeReportPage extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
 
+          if (snapshot.hasError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 64,
+                      color: Colors.grey[500],
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Unable to load income report',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      AppConstants.formatError(snapshot.error!),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return Center(
               child: Column(
@@ -36,10 +68,7 @@ class IncomeReportPage extends StatelessWidget {
                   const SizedBox(height: 16),
                   Text(
                     'No bookings yet',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 18, color: Colors.grey[600]),
                   ),
                 ],
               ),
@@ -47,7 +76,10 @@ class IncomeReportPage extends StatelessWidget {
           }
 
           final bookings = snapshot.data!;
-          final totalIncome = bookings.fold<double>(
+          final confirmedBookings = bookings
+              .where((booking) => booking.status.toLowerCase() == 'confirmed')
+              .toList();
+          final computedTotalIncome = confirmedBookings.fold<double>(
             0,
             (sum, booking) => sum + booking.price,
           );
@@ -62,13 +94,13 @@ class IncomeReportPage extends StatelessWidget {
                   gradient: LinearGradient(
                     colors: [
                       AppConstants.successColor,
-                      AppConstants.successColor.withOpacity(0.7),
+                      AppConstants.successColor.withValues(alpha: 0.7),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: AppConstants.successColor.withOpacity(0.3),
+                      color: AppConstants.successColor.withValues(alpha: 0.3),
                       blurRadius: 10,
                       offset: const Offset(0, 5),
                     ),
@@ -84,14 +116,11 @@ class IncomeReportPage extends StatelessWidget {
                     const SizedBox(height: 12),
                     const Text(
                       'Total Income',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white70,
-                      ),
+                      style: TextStyle(fontSize: 18, color: Colors.white70),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '৳ ${totalIncome.toStringAsFixed(2)}',
+                      '৳ ${computedTotalIncome.toStringAsFixed(2)}',
                       style: const TextStyle(
                         fontSize: 40,
                         fontWeight: FontWeight.bold,
@@ -100,7 +129,7 @@ class IncomeReportPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'From ${bookings.length} bookings',
+                      'From ${confirmedBookings.length} confirmed bookings',
                       style: const TextStyle(
                         fontSize: 14,
                         color: Colors.white70,
@@ -122,16 +151,12 @@ class IncomeReportPage extends StatelessWidget {
                     ),
                     Text(
                       '${bookings.length} total',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 12),
-
               Expanded(
                 child: ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -148,7 +173,9 @@ class IncomeReportPage extends StatelessWidget {
                         leading: Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: AppConstants.primaryColor.withOpacity(0.1),
+                            color: AppConstants.primaryColor.withValues(
+                              alpha: 0.1,
+                            ),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: const Icon(
@@ -201,9 +228,17 @@ class IncomeReportPage extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(height: 8),
-                                _buildDetailRow(Icons.email, 'Email', booking.userEmail),
+                                _buildDetailRow(
+                                  Icons.email,
+                                  'Email',
+                                  booking.userEmail,
+                                ),
                                 const SizedBox(height: 6),
-                                _buildDetailRow(Icons.phone, 'Phone', booking.userPhone),
+                                _buildDetailRow(
+                                  Icons.phone,
+                                  'Phone',
+                                  booking.userPhone,
+                                ),
                                 const SizedBox(height: 16),
                                 const Text(
                                   'Flight Details',
@@ -213,16 +248,34 @@ class IncomeReportPage extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(height: 8),
-                                _buildDetailRow(Icons.flight, 'Flight', booking.flightNumber),
+                                _buildDetailRow(
+                                  Icons.flight,
+                                  'Flight',
+                                  booking.flightNumber,
+                                ),
                                 const SizedBox(height: 6),
-                                _buildDetailRow(Icons.calendar_today, 'Date', booking.date),
+                                _buildDetailRow(
+                                  Icons.calendar_today,
+                                  'Date',
+                                  booking.date,
+                                ),
                                 const SizedBox(height: 6),
-                                _buildDetailRow(Icons.access_time, 'Time', booking.time),
+                                _buildDetailRow(
+                                  Icons.access_time,
+                                  'Time',
+                                  booking.time,
+                                ),
                                 const SizedBox(height: 6),
                                 _buildDetailRow(
                                   Icons.event,
                                   'Booked On',
                                   _formatDateTime(booking.bookingDate),
+                                ),
+                                const SizedBox(height: 6),
+                                _buildDetailRow(
+                                  Icons.info_outline,
+                                  'Status',
+                                  booking.status.toUpperCase(),
                                 ),
                               ],
                             ),
@@ -247,18 +300,12 @@ class IncomeReportPage extends StatelessWidget {
         const SizedBox(width: 8),
         Text(
           '$label: ',
-          style: TextStyle(
-            fontSize: 13,
-            color: Colors.grey[700],
-          ),
+          style: TextStyle(fontSize: 13, color: Colors.grey[700]),
         ),
         Expanded(
           child: Text(
             value,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
           ),
         ),
       ],

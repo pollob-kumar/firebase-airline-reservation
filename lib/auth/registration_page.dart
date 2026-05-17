@@ -17,7 +17,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
   final _passwordController = TextEditingController();
   final _adminCodeController = TextEditingController();
   final AuthService _authService = AuthService();
-  
+
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _isAdminRegistration = false;
@@ -25,10 +25,14 @@ class _RegistrationPageState extends State<RegistrationPage> {
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // Admin hole code check korbo
+    // Validate admin code when admin registration is selected
     if (_isAdminRegistration) {
       if (_adminCodeController.text.trim() != AppConstants.adminCode) {
-        AppConstants.showSnackBar(context, 'Invalid Admin Code!', isError: true);
+        AppConstants.showSnackBar(
+          context,
+          'Invalid Admin Code!',
+          isError: true,
+        );
         return;
       }
     }
@@ -44,13 +48,34 @@ class _RegistrationPageState extends State<RegistrationPage> {
         role: _isAdminRegistration ? 'admin' : 'user',
       );
 
-      if (mounted) {
-        AppConstants.showSnackBar(context, 'Registration successful! Please login.');
-        Navigator.pop(context);
+      if (!mounted) {
+        return;
       }
+
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Registration Successful'),
+          content: const Text('Your account has been created. Please login.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+      if (!mounted) {
+        return;
+      }
+      Navigator.pop(context, 'Registration successful! Please login.');
     } catch (e) {
       if (mounted) {
-        AppConstants.showSnackBar(context, 'Registration failed: ${e.toString()}', isError: true);
+        AppConstants.showSnackBar(
+          context,
+          AppConstants.formatError(e),
+          isError: true,
+        );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -65,10 +90,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              AppConstants.primaryColor,
-              AppConstants.secondaryColor,
-            ],
+            colors: [AppConstants.primaryColor, AppConstants.secondaryColor],
           ),
         ),
         child: SafeArea(
@@ -91,7 +113,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: AppConstants.successColor.withOpacity(0.1),
+                            color: AppConstants.successColor.withValues(
+                              alpha: 0.1,
+                            ),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -109,7 +133,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          _isAdminRegistration ? 'Register as Admin' : 'Register as User',
+                          _isAdminRegistration
+                              ? 'Register as Admin'
+                              : 'Register as User',
                           style: AppConstants.bodyStyle,
                         ),
                         const SizedBox(height: 24),
@@ -126,14 +152,16 @@ class _RegistrationPageState extends State<RegistrationPage> {
                               style: TextStyle(fontWeight: FontWeight.w600),
                             ),
                             subtitle: Text(
-                              _isAdminRegistration ? 'Admin code required' : 'Regular user',
+                              _isAdminRegistration
+                                  ? 'Admin code required'
+                                  : 'Regular user',
                               style: const TextStyle(fontSize: 12),
                             ),
                             value: _isAdminRegistration,
                             onChanged: (value) {
                               setState(() => _isAdminRegistration = value);
                             },
-                            activeColor: AppConstants.warningColor,
+                            activeThumbColor: AppConstants.warningColor,
                           ),
                         ),
                         const SizedBox(height: 20),
@@ -150,7 +178,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Name দিন';
+                              return 'Please enter your full name';
                             }
                             return null;
                           },
@@ -170,10 +198,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Phone number দিন';
+                              return 'Please enter your phone number';
                             }
                             if (value.length < 10) {
-                              return 'Valid phone number দিন';
+                              return 'Please enter a valid phone number';
                             }
                             return null;
                           },
@@ -193,10 +221,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Email দিন';
+                              return 'Please enter your email';
                             }
                             if (!value.contains('@')) {
-                              return 'Valid email দিন';
+                              return 'Please enter a valid email';
                             }
                             return null;
                           },
@@ -212,10 +240,14 @@ class _RegistrationPageState extends State<RegistrationPage> {
                             prefixIcon: const Icon(Icons.lock_outline),
                             suffixIcon: IconButton(
                               icon: Icon(
-                                _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                _obscurePassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
                               ),
                               onPressed: () {
-                                setState(() => _obscurePassword = !_obscurePassword);
+                                setState(
+                                  () => _obscurePassword = !_obscurePassword,
+                                );
                               },
                             ),
                             border: OutlineInputBorder(
@@ -224,10 +256,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Password দিন';
+                              return 'Please enter a password';
                             }
                             if (value.length < 6) {
-                              return 'Password কমপক্ষে 6 character হতে হবে';
+                              return 'Password must be at least 6 characters';
                             }
                             return null;
                           },
@@ -241,17 +273,21 @@ class _RegistrationPageState extends State<RegistrationPage> {
                             keyboardType: TextInputType.number,
                             decoration: InputDecoration(
                               labelText: 'Admin Code',
-                              prefixIcon: const Icon(Icons.admin_panel_settings),
+                              prefixIcon: const Icon(
+                                Icons.admin_panel_settings,
+                              ),
                               hintText: 'Enter admin code',
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              fillColor: AppConstants.warningColor.withOpacity(0.1),
+                              fillColor: AppConstants.warningColor.withValues(
+                                alpha: 0.1,
+                              ),
                               filled: true,
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
-                                return 'Admin code দিন';
+                                return 'Please enter the admin code';
                               }
                               return null;
                             },
@@ -266,8 +302,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
                           child: ElevatedButton(
                             onPressed: _isLoading ? null : _register,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: _isAdminRegistration 
-                                  ? AppConstants.warningColor 
+                              backgroundColor: _isAdminRegistration
+                                  ? AppConstants.warningColor
                                   : AppConstants.successColor,
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
@@ -284,7 +320,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
                                     ),
                                   )
                                 : Text(
-                                    _isAdminRegistration ? 'Register as Admin' : 'Register',
+                                    _isAdminRegistration
+                                        ? 'Register as Admin'
+                                        : 'Register',
                                     style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,

@@ -23,7 +23,11 @@ class _AddBalancePageState extends State<AddBalancePage> {
     final amount = double.tryParse(_amountController.text);
 
     if (amount == null || amount <= 0) {
-      AppConstants.showSnackBar(context, 'Valid amount দিন', isError: true);
+      AppConstants.showSnackBar(
+        context,
+        'Please enter a valid amount',
+        isError: true,
+      );
       return;
     }
 
@@ -44,7 +48,7 @@ class _AddBalancePageState extends State<AddBalancePage> {
       if (mounted) {
         AppConstants.showSnackBar(
           context,
-          'Failed to add balance: ${e.toString()}',
+          'Failed to add balance: ${AppConstants.formatError(e)}',
           isError: true,
         );
       }
@@ -79,7 +83,7 @@ class _AddBalancePageState extends State<AddBalancePage> {
                   gradient: LinearGradient(
                     colors: [
                       AppConstants.successColor,
-                      AppConstants.successColor.withOpacity(0.7),
+                      AppConstants.successColor.withValues(alpha: 0.7),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(16),
@@ -88,10 +92,7 @@ class _AddBalancePageState extends State<AddBalancePage> {
                   children: [
                     const Text(
                       'Current Balance',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.white70,
-                      ),
+                      style: TextStyle(fontSize: 16, color: Colors.white70),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -109,10 +110,7 @@ class _AddBalancePageState extends State<AddBalancePage> {
             const SizedBox(height: 32),
 
             // Quick Amount Buttons
-            const Text(
-              'Quick Add',
-              style: AppConstants.subHeadingStyle,
-            ),
+            const Text('Quick Add', style: AppConstants.subHeadingStyle),
             const SizedBox(height: 12),
             Wrap(
               spacing: 12,

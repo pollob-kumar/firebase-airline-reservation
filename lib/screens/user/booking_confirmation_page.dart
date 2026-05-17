@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/user_model.dart';
 import '../../models/flight_model.dart';
-import '../../models/booking_model.dart';
 import '../../services/firestore_service.dart';
 import '../../services/constants.dart';
 
@@ -16,7 +15,8 @@ class BookingConfirmationPage extends StatefulWidget {
   });
 
   @override
-  State<BookingConfirmationPage> createState() => _BookingConfirmationPageState();
+  State<BookingConfirmationPage> createState() =>
+      _BookingConfirmationPageState();
 }
 
 class _BookingConfirmationPageState extends State<BookingConfirmationPage> {
@@ -24,69 +24,22 @@ class _BookingConfirmationPageState extends State<BookingConfirmationPage> {
   bool _isLoading = false;
 
   Future<void> _confirmBooking() async {
-    // Balance check
-    if (widget.user.balance < widget.flight.price) {
-      AppConstants.showSnackBar(
-        context,
-        'Insufficient balance! Please add money.',
-        isError: true,
-      );
-      return;
-    }
-
-    // Seat check
-    if (widget.flight.availableSeats <= 0) {
-      AppConstants.showSnackBar(
-        context,
-        'No seats available!',
-        isError: true,
-      );
-      return;
-    }
-
     setState(() => _isLoading = true);
 
     try {
-      // Create booking
-      final booking = BookingModel(
-        id: '',
+      await _firestoreService.bookFlight(
         userId: widget.user.uid,
-        userName: widget.user.name,
-        userEmail: widget.user.email,
-        userPhone: widget.user.phone,
         flightId: widget.flight.id,
-        flightNumber: widget.flight.flightNumber,
-        from: widget.flight.from,
-        to: widget.flight.to,
-        date: widget.flight.date,
-        time: widget.flight.time,
-        price: widget.flight.price,
-        bookingDate: DateTime.now(),
       );
 
-      await _firestoreService.createBooking(booking);
-
-      // Update user balance
-      final newBalance = widget.user.balance - widget.flight.price;
-      await _firestoreService.updateBalance(widget.user.uid, newBalance);
-
-      // Update available seats
-      final newSeats = widget.flight.availableSeats - 1;
-      await _firestoreService.updateFlightSeats(widget.flight.id, newSeats);
-
       if (mounted) {
-        AppConstants.showSnackBar(
-          context,
-          'Booking confirmed successfully! ✈️',
-        );
-        Navigator.pop(context);
-        Navigator.pop(context);
+        Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
         AppConstants.showSnackBar(
           context,
-          'Booking failed: ${e.toString()}',
+          'Booking failed: ${AppConstants.formatError(e)}',
           isError: true,
         );
       }
@@ -97,6 +50,8 @@ class _BookingConfirmationPageState extends State<BookingConfirmationPage> {
 
   @override
   Widget build(BuildContext context) {
+    final bool canBook = widget.user.balance >= widget.flight.price;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Confirm Booking'),
@@ -182,8 +137,8 @@ class _BookingConfirmationPageState extends State<BookingConfirmationPage> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      AppConstants.primaryColor.withOpacity(0.1),
-                      AppConstants.accentColor.withOpacity(0.1),
+                      AppConstants.primaryColor.withValues(alpha: 0.1),
+                      AppConstants.accentColor.withValues(alpha: 0.1),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(16),
@@ -247,7 +202,8 @@ class _BookingConfirmationPageState extends State<BookingConfirmationPage> {
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: (widget.user.balance - widget.flight.price) >= 0
+                            color:
+                                (widget.user.balance - widget.flight.price) >= 0
                                 ? AppConstants.successColor
                                 : AppConstants.errorColor,
                           ),
@@ -261,16 +217,13 @@ class _BookingConfirmationPageState extends State<BookingConfirmationPage> {
             const SizedBox(height: 24),
 
             // Warning if insufficient balance
-            if (widget.user.balance < widget.flight.price)
+            if (!canBook)
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppConstants.errorColor.withOpacity(0.1),
+                  color: AppConstants.errorColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: AppConstants.errorColor,
-                    width: 1,
-                  ),
+                  border: Border.all(color: AppConstants.errorColor, width: 1),
                 ),
                 child: const Row(
                   children: [
@@ -295,7 +248,7 @@ class _BookingConfirmationPageState extends State<BookingConfirmationPage> {
               width: double.infinity,
               height: 50,
               child: ElevatedButton(
-                onPressed: _isLoading ? null : _confirmBooking,
+                onPressed: _isLoading || !canBook ? null : _confirmBooking,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppConstants.successColor,
                   foregroundColor: Colors.white,
@@ -331,19 +284,10 @@ class _BookingConfirmationPageState extends State<BookingConfirmationPage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            color: Colors.grey[600],
-          ),
-        ),
+        Text(label, style: TextStyle(fontSize: 14, color: Colors.grey[600])),
         Text(
           value,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
         ),
       ],
     );

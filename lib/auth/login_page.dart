@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'auth_service.dart';
+import 'account_disabled_page.dart';
 import 'registration_page.dart';
 import '../models/user_model.dart';
 import '../screens/user/user_dashboard.dart';
@@ -7,7 +8,9 @@ import '../screens/admin/admin_dashboard.dart';
 import '../services/constants.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  final String? successMessage;
+
+  const LoginPage({super.key, this.successMessage});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -21,6 +24,17 @@ class _LoginPageState extends State<LoginPage> {
   bool _isLoading = false;
   bool _obscurePassword = true;
 
+  @override
+  void initState() {
+    super.initState();
+    if (widget.successMessage != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        AppConstants.showSnackBar(context, widget.successMessage!);
+      });
+    }
+  }
+
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -32,27 +46,74 @@ class _LoginPageState extends State<LoginPage> {
         _passwordController.text.trim(),
       );
 
-      if (user != null && mounted) {
-        // Role onujayi dashboard e niye jabe
+      if (user == null) {
+        if (mounted) {
+          AppConstants.showSnackBar(
+            context,
+            'Account profile not found. Please contact support.',
+            isError: true,
+          );
+        }
+        return;
+      }
+
+      if (mounted) {
+        if (user.isDisabled) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) =>
+                  AccountDisabledPage(reason: user.disabledReason ?? ''),
+            ),
+          );
+          return;
+        }
+        // Navigate based on role
         if (user.role == 'admin') {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (_) => AdminDashboard(user: user)),
+            MaterialPageRoute(
+              builder: (_) => AdminDashboard(
+                user: user,
+                successMessage: 'Login successful.',
+              ),
+            ),
           );
         } else {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (_) => UserDashboard(user: user)),
+            MaterialPageRoute(
+              builder: (_) => UserDashboard(
+                user: user,
+                successMessage: 'Login successful.',
+              ),
+            ),
           );
         }
       }
     } catch (e) {
       if (mounted) {
-        AppConstants.showSnackBar(context, 'Login failed: ${e.toString()}', isError: true);
+        _showLoginErrorDialog(AppConstants.formatError(e));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _showLoginErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Login failed'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -63,10 +124,7 @@ class _LoginPageState extends State<LoginPage> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              AppConstants.primaryColor,
-              AppConstants.secondaryColor,
-            ],
+            colors: [AppConstants.primaryColor, AppConstants.secondaryColor],
           ),
         ),
         child: SafeArea(
@@ -89,7 +147,9 @@ class _LoginPageState extends State<LoginPage> {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: AppConstants.primaryColor.withOpacity(0.1),
+                            color: AppConstants.primaryColor.withValues(
+                              alpha: 0.1,
+                            ),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -99,7 +159,7 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
                         const SizedBox(height: 24),
-                        
+
                         // Title
                         const Text(
                           'Airline Reservation',
@@ -125,10 +185,10 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Email দিন';
+                              return 'Please enter your email';
                             }
                             if (!value.contains('@')) {
-                              return 'Valid email দিন';
+                              return 'Please enter a valid email';
                             }
                             return null;
                           },
@@ -144,10 +204,14 @@ class _LoginPageState extends State<LoginPage> {
                             prefixIcon: const Icon(Icons.lock_outline),
                             suffixIcon: IconButton(
                               icon: Icon(
-                                _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                _obscurePassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
                               ),
                               onPressed: () {
-                                setState(() => _obscurePassword = !_obscurePassword);
+                                setState(
+                                  () => _obscurePassword = !_obscurePassword,
+                                );
                               },
                             ),
                             border: OutlineInputBorder(
@@ -156,10 +220,10 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Password দিন';
+                              return 'Please enter your password';
                             }
                             if (value.length < 6) {
-                              return 'Password কমপক্ষে 6 character হতে হবে';
+                              return 'Password must be at least 6 characters';
                             }
                             return null;
                           },
@@ -205,13 +269,17 @@ class _LoginPageState extends State<LoginPage> {
                           children: [
                             const Text("Don't have an account? "),
                             TextButton(
-                              onPressed: () {
-                                Navigator.push(
+                              onPressed: () async {
+                                final result = await Navigator.push(
                                   context,
                                   MaterialPageRoute(
                                     builder: (_) => const RegistrationPage(),
                                   ),
                                 );
+                                if (!context.mounted) return;
+                                if (result is String && result.isNotEmpty) {
+                                  AppConstants.showSnackBar(context, result);
+                                }
                               },
                               child: const Text(
                                 'Register',
