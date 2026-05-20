@@ -666,11 +666,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
       builder: (context, snapshot) {
         final bookings = snapshot.data ?? [];
         final DateTime now = DateTime.now();
-        final double revenue = bookings
+        final confirmedBookings = bookings
+            .where((booking) => booking.status.toLowerCase() == 'confirmed');
+        final double revenue = confirmedBookings
             .where((booking) {
-              return booking.bookingDate.year == now.year &&
-                  booking.bookingDate.month == now.month &&
-                  booking.status.toLowerCase() == 'confirmed';
+              final DateTime date = booking.confirmedAt ?? booking.bookingDate;
+              return date.year == now.year && date.month == now.month;
             })
             .fold(0.0, (sum, booking) => sum + booking.price);
         return _buildStatCard(

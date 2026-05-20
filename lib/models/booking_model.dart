@@ -12,6 +12,7 @@ class BookingModel {
   final String time;
   final double price;
   final DateTime bookingDate;
+  final DateTime? confirmedAt;
   final String status;
 
   BookingModel({
@@ -28,6 +29,7 @@ class BookingModel {
     required this.time,
     required this.price,
     required this.bookingDate,
+    this.confirmedAt,
     this.status = 'confirmed',
   });
 
@@ -46,6 +48,7 @@ class BookingModel {
       time: map['time'] ?? '',
       price: (map['price'] ?? 0.0).toDouble(),
       bookingDate: map['bookingDate']?.toDate() ?? DateTime.now(),
+      confirmedAt: map['confirmedAt']?.toDate(),
       status: map['status'] ?? 'confirmed',
     );
   }
@@ -64,6 +67,7 @@ class BookingModel {
       'time': time,
       'price': price,
       'bookingDate': bookingDate,
+      if (confirmedAt != null) 'confirmedAt': confirmedAt,
       'status': status,
     };
   }

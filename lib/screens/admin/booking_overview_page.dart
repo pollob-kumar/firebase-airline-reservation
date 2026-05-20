@@ -36,7 +36,9 @@ class BookingOverviewPage extends StatelessWidget {
           }
 
           final bookings = snapshot.data ?? [];
-          final double totalRevenue = bookings.fold(
+          final confirmedBookings = bookings
+              .where((booking) => booking.status.toLowerCase() == 'confirmed');
+          final double totalRevenue = confirmedBookings.fold(
             0.0,
             (sum, booking) => sum + booking.price,
           );
