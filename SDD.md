@@ -67,7 +67,7 @@ tickets/
        ├─ price        : Number
        └─ purchaseDate : Timestamp
 ```
-> ⚠️ `userName` এবং `userEmail` denormalized করে রাখা হয়েছে — Admin Dashboard income table-এ user details দেখানোর জন্য extra query ছাড়াই কাজ করবে।
+> ⚠️ `userName` and `userEmail` have been denormalized — Admin Dashboard will work without an extra query to show user details in the income table.
 
 ### 2.4 `adminStats` Collection *(NEW — Income Tracking)*
 ```
@@ -101,15 +101,15 @@ transactions/
 | `registerAdmin(...)` | Hidden code "235857" verify করে Admin registration |
 | `logout()` | Firebase sign-out |
 
-> ⚠️ **Security Note:** Hidden code শুধু client-side validate করা unsafe। Production-এ Firebase Cloud Function দিয়ে server-side validate করা উচিত — APK decompile করলেও code expose হবে না।
+> ⚠️ **Security Note:** It is unsafe to validate hidden code only on the client side. In production, you should validate it server-side with Firebase Cloud Functions — even if you decompile the APK, the code will not be exposed.
 
 ### 3.2 Admin Module
 
 | Function | Description |
 |----------|-------------|
-| `addFlight(flightData)` | Firestore-এ নতুন flight document create |
+| `addFlight(flightData)` | Firestore, new flight document create |
 | `deleteFlight(flightId)` | Flight document delete |
-| `getIncomeReport()` | `tickets` collection + `adminStats/global` থেকে income data fetch |
+| `getIncomeReport()` | `tickets` collection + `adminStats/global` to income data fetch |
 
 ### 3.3 User Module
 
@@ -117,39 +117,39 @@ transactions/
 |----------|-------------|
 | `addBalance(userId, amount)` | User document-এ balance update |
 | `getBalance(userId)` | User balance read |
-| `getAvailableFlights()` | `flights` collection থেকে seatsAvailable > 0 filter করে list |
-| `buyTicket(userId, flightId)` | Atomic transaction — নিচে বিস্তারিত |
+| `getAvailableFlights()` | `flights` collection to seatsAvailable > 0 filter list |
+| `buyTicket(userId, flightId)` | Atomic transaction — below details |
 
 ---
 
 ## 4. Transaction Flow — Buy Ticket (CRITICAL)
 
-Ticket buy operation অবশ্যই **`runTransaction()`** দিয়ে করতে হবে — যাতে সব operation atomic হয়।
+The ticket buy operation must be done with **`runTransaction()`** — so that all operations are atomic.
 
 ```
-Step 1: User balance check করো
+Step 1: User balance check 
          └─ balance < flight.price → throw "Insufficient Balance"
 
-Step 2: Flight seatsAvailable check করো
+Step 2: Flight seatsAvailable check 
          └─ seatsAvailable <= 0 → throw "Flight Full"
 
-Step 3: User balance deduct করো
+Step 3: User balance deduct 
          └─ users/{userId}.balance -= flight.price
 
-Step 4: Flight seat কমাও
+Step 4: Flight seat 
          └─ flights/{flightId}.seatsAvailable -= 1
 
-Step 5: Ticket document create করো
+Step 5: Ticket document create 
          └─ tickets/{newId} = { userId, flightId, price, ... }
 
-Step 6: Admin total income update করো
+Step 6: Admin total income update 
          └─ adminStats/global.totalIncome += flight.price
 
 Step 7: Transaction log (optional)
          └─ transactions/{newId} = { userId, type="buy_ticket", amount }
 ```
 
-> ✅ সব step একসাথে succeed করবে অথবা সবই rollback হবে — data inconsistency হবে না।
+> ✅ All steps will succeed together or all will be rolled back — there will be no data inconsistency.
 
 ---
 
