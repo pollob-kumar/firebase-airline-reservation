@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../models/booking_model.dart';
 import '../../models/user_model.dart';
 import '../../services/firestore_service.dart';
@@ -583,9 +584,7 @@ class _UserDashboardState extends State<UserDashboard> {
     if (picked == null) {
       return;
     }
-    final String day = picked.day.toString().padLeft(2, '0');
-    final String month = picked.month.toString().padLeft(2, '0');
-    _dateController.text = '$day/$month/${picked.year}';
+    _dateController.text = DateFormat('dd MMM yyyy').format(picked);
   }
 
   int? _parsePassengerCount(String raw) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../models/user_model.dart';
 import '../../models/flight_model.dart';
 import '../../services/firestore_service.dart';
@@ -370,8 +371,9 @@ class _AvailableFlightsPageState extends State<AvailableFlightsPage> {
   List<FlightModel> _applyFilters(List<FlightModel> flights) {
     final origin = widget.origin?.trim().toLowerCase() ?? '';
     final destination = widget.destination?.trim().toLowerCase() ?? '';
-    final date = widget.date?.trim().toLowerCase() ?? '';
+    final dateQuery = widget.date?.trim() ?? '';
     final int? passengers = widget.passengers;
+    final DateTime? normalizedQueryDate = _tryParseDate(dateQuery);
 
     return flights.where((flight) {
       if (origin.isNotEmpty && !flight.from.toLowerCase().contains(origin)) {
@@ -381,14 +383,52 @@ class _AvailableFlightsPageState extends State<AvailableFlightsPage> {
           !flight.to.toLowerCase().contains(destination)) {
         return false;
       }
-      if (date.isNotEmpty && !flight.date.toLowerCase().contains(date)) {
-        return false;
+      if (dateQuery.isNotEmpty) {
+        if (normalizedQueryDate == null) {
+          if (!flight.date.toLowerCase().contains(dateQuery.toLowerCase())) {
+            return false;
+          }
+        } else {
+          final DateTime? flightDate = _tryParseDate(flight.date);
+          if (flightDate == null || !_isSameDate(flightDate, normalizedQueryDate)) {
+            return false;
+          }
+        }
       }
       if (passengers != null && flight.availableSeats < passengers) {
         return false;
       }
       return true;
     }).toList();
+  }
+
+  DateTime? _tryParseDate(String raw) {
+    final value = raw.trim();
+    if (value.isEmpty) {
+      return null;
+    }
+    final formats = <String>[
+      'dd MMM yyyy',
+      'dd/MM/yyyy',
+      'dd-MM-yyyy',
+      'yyyy-MM-dd',
+    ];
+    for (final format in formats) {
+      try {
+        return DateFormat(format).parseStrict(value);
+      } on FormatException {
+        // Try next format.
+      }
+    }
+    try {
+      return DateTime.parse(value);
+    } on FormatException {
+      return null;
+    }
+  }
+
+  bool _isSameDate(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
   Widget _buildEmptyState(String message) {
