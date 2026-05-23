@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../models/user_model.dart';
 import '../../models/flight_model.dart';
@@ -1038,51 +1037,157 @@ class _AdminDashboardState extends State<AdminDashboard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text('Booking Trends', style: AppConstants.subHeadingStyle),
+          const SizedBox(height: 6),
+          Text(
+            'Top Selling Flights (Last 7 Days)',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
           const SizedBox(height: 12),
           StreamBuilder<List<BookingModel>>(
             stream: _firestoreService.getAllBookings(),
+            initialData: const [],
             builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Text(
+                    AppConstants.formatError(snapshot.error!),
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                );
+              }
+
               final bookings = snapshot.data ?? [];
-              final DateTime today = DateTime.now();
-              final List<int> counts = List.generate(7, (index) {
-                final DateTime day = DateTime(
-                  today.year,
-                  today.month,
-                  today.day,
-                ).subtract(Duration(days: 6 - index));
-                return bookings.where((booking) {
-                  final date = booking.bookingDate;
-                  return date.year == day.year &&
-                      date.month == day.month &&
-                      date.day == day.day;
-                }).length;
-              });
+              final bool isLoading =
+                  snapshot.connectionState == ConnectionState.waiting &&
+                      bookings.isEmpty;
+              if (isLoading) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Text(
+                    'Loading booking trends...',
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                );
+              }
+              final DateTime now = DateTime.now();
+              final DateTime end = DateTime(
+                now.year,
+                now.month,
+                now.day,
+              ).add(const Duration(days: 1));
+              final DateTime start = end.subtract(const Duration(days: 7));
+              final recentBookings = bookings.where((booking) {
+                final date = booking.bookingDate;
+                return !date.isBefore(start) && date.isBefore(end);
+              }).toList();
 
-              final int maxCount = counts.fold(1, max);
+              if (recentBookings.isEmpty) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Text(
+                    'No bookings in the last 7 days.',
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                );
+              }
 
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: counts.map((count) {
-                  final double height = 80 * (count / maxCount);
-                  return Expanded(
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                      height: max(12.0, height),
-                      decoration: BoxDecoration(
-                        color: AppConstants.primaryColor.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      alignment: Alignment.bottomCenter,
-                      child: Container(
-                        height: height,
-                        decoration: BoxDecoration(
-                          color: AppConstants.primaryColor,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
+              final Map<String, int> counts = {};
+              final Map<String, String> routes = {};
+              for (final booking in recentBookings) {
+                final String key = booking.flightNumber.trim().isEmpty
+                    ? '${booking.from}-${booking.to}'
+                    : booking.flightNumber;
+                counts[key] = (counts[key] ?? 0) + 1;
+                routes.putIfAbsent(key, () => '${booking.from} → ${booking.to}');
+              }
+
+              final trends = counts.entries
+                  .map(
+                    (entry) => _BookingTrend(
+                      flightNumber: entry.key,
+                      route: routes[entry.key] ?? '',
+                      count: entry.value,
                     ),
-                  );
-                }).toList(),
+                  )
+                  .toList()
+                ..sort((a, b) => b.count.compareTo(a.count));
+
+              final topTrends = trends.take(5).toList();
+              final int maxCount =
+                  topTrends.isNotEmpty ? topTrends.first.count : 1;
+
+              return Column(
+                children: topTrends
+                    .map((trend) => _buildTrendRow(trend, maxCount))
+                    .toList(),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTrendRow(_BookingTrend trend, int maxCount) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      trend.flightNumber,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    if (trend.route.isNotEmpty)
+                      Text(
+                        trend.route,
+                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                '${trend.count}',
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final double width = maxCount == 0
+                  ? 0
+                  : (trend.count / maxCount) * constraints.maxWidth;
+              return Stack(
+                children: [
+                  Container(
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: AppConstants.primaryColor.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                  Container(
+                    height: 8,
+                    width: width,
+                    decoration: BoxDecoration(
+                      color: AppConstants.primaryColor,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                ],
               );
             },
           ),
@@ -1528,4 +1633,16 @@ class _AdminDashboardState extends State<AdminDashboard> {
       ),
     );
   }
+}
+
+class _BookingTrend {
+  final String flightNumber;
+  final String route;
+  final int count;
+
+  const _BookingTrend({
+    required this.flightNumber,
+    required this.route,
+    required this.count,
+  });
 }

@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class BookingModel {
   final String id;
   final String userId;
@@ -33,6 +35,44 @@ class BookingModel {
     this.status = 'confirmed',
   });
 
+  static DateTime _parseDate(dynamic value) {
+    if (value is Timestamp) {
+      return value.toDate();
+    }
+    if (value is DateTime) {
+      return value;
+    }
+    if (value is String) {
+      final parsed = DateTime.tryParse(value);
+      if (parsed != null) {
+        return parsed;
+      }
+    }
+    if (value is num) {
+      return DateTime.fromMillisecondsSinceEpoch(value.toInt());
+    }
+    return DateTime.now();
+  }
+
+  static DateTime? _parseNullableDate(dynamic value) {
+    if (value == null) {
+      return null;
+    }
+    if (value is Timestamp) {
+      return value.toDate();
+    }
+    if (value is DateTime) {
+      return value;
+    }
+    if (value is String) {
+      return DateTime.tryParse(value);
+    }
+    if (value is num) {
+      return DateTime.fromMillisecondsSinceEpoch(value.toInt());
+    }
+    return null;
+  }
+
   factory BookingModel.fromMap(Map<String, dynamic> map, String id) {
     return BookingModel(
       id: id,
@@ -47,8 +87,8 @@ class BookingModel {
       date: map['date'] ?? '',
       time: map['time'] ?? '',
       price: (map['price'] ?? 0.0).toDouble(),
-      bookingDate: map['bookingDate']?.toDate() ?? DateTime.now(),
-      confirmedAt: map['confirmedAt']?.toDate(),
+      bookingDate: _parseDate(map['bookingDate']),
+      confirmedAt: _parseNullableDate(map['confirmedAt']),
       status: map['status'] ?? 'confirmed',
     );
   }
