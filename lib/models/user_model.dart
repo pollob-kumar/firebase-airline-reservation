@@ -6,6 +6,8 @@ class UserModel {
   final String role; // 'user' or 'admin'
   final double balance;
   final DateTime createdAt;
+  final String status; // 'active' or 'disabled'
+  final String? disabledReason;
 
   UserModel({
     required this.uid,
@@ -15,6 +17,8 @@ class UserModel {
     required this.role,
     this.balance = 0.0,
     required this.createdAt,
+    this.status = 'active',
+    this.disabledReason,
   });
 
   // Firestore theke data niye ashar jonno
@@ -27,6 +31,8 @@ class UserModel {
       role: map['role'] ?? 'user',
       balance: (map['balance'] ?? 0.0).toDouble(),
       createdAt: map['createdAt']?.toDate() ?? DateTime.now(),
+      status: map['status'] ?? 'active',
+      disabledReason: map['disabledReason'],
     );
   }
 
@@ -39,6 +45,10 @@ class UserModel {
       'role': role,
       'balance': balance,
       'createdAt': createdAt,
+      'status': status,
+      'disabledReason': disabledReason,
     };
   }
+
+  bool get isDisabled => status.toLowerCase() == 'disabled';
 }

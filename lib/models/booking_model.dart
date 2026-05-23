@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class BookingModel {
   final String id;
   final String userId;
@@ -12,6 +14,7 @@ class BookingModel {
   final String time;
   final double price;
   final DateTime bookingDate;
+  final DateTime? confirmedAt;
   final String status;
 
   BookingModel({
@@ -28,8 +31,47 @@ class BookingModel {
     required this.time,
     required this.price,
     required this.bookingDate,
+    this.confirmedAt,
     this.status = 'confirmed',
   });
+
+  static DateTime _parseDate(dynamic value) {
+    if (value is Timestamp) {
+      return value.toDate();
+    }
+    if (value is DateTime) {
+      return value;
+    }
+    if (value is String) {
+      final parsed = DateTime.tryParse(value);
+      if (parsed != null) {
+        return parsed;
+      }
+    }
+    if (value is num) {
+      return DateTime.fromMillisecondsSinceEpoch(value.toInt());
+    }
+    return DateTime.now();
+  }
+
+  static DateTime? _parseNullableDate(dynamic value) {
+    if (value == null) {
+      return null;
+    }
+    if (value is Timestamp) {
+      return value.toDate();
+    }
+    if (value is DateTime) {
+      return value;
+    }
+    if (value is String) {
+      return DateTime.tryParse(value);
+    }
+    if (value is num) {
+      return DateTime.fromMillisecondsSinceEpoch(value.toInt());
+    }
+    return null;
+  }
 
   factory BookingModel.fromMap(Map<String, dynamic> map, String id) {
     return BookingModel(
@@ -45,7 +87,8 @@ class BookingModel {
       date: map['date'] ?? '',
       time: map['time'] ?? '',
       price: (map['price'] ?? 0.0).toDouble(),
-      bookingDate: map['bookingDate']?.toDate() ?? DateTime.now(),
+      bookingDate: _parseDate(map['bookingDate']),
+      confirmedAt: _parseNullableDate(map['confirmedAt']),
       status: map['status'] ?? 'confirmed',
     );
   }
@@ -64,6 +107,7 @@ class BookingModel {
       'time': time,
       'price': price,
       'bookingDate': bookingDate,
+      if (confirmedAt != null) 'confirmedAt': confirmedAt,
       'status': status,
     };
   }
